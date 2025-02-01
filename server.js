@@ -2,11 +2,11 @@ require('dotenv').config();
 const express = require('express');
 const bodyParser = require('body-parser');
 const cors = require('cors');
-const helmet = require('helmet'); // Security headers
-const rateLimit = require('express-rate-limit'); // Rate limiting
-const { body, validationResult } = require('express-validator'); // Input validation
-const xss = require('xss-clean'); // Prevent XSS attacks
-const sanitizeHtml = require('sanitize-html'); // Sanitize HTML input
+const helmet = require('helmet');
+const rateLimit = require('express-rate-limit');
+const { body, validationResult } = require('express-validator');
+const xss = require('xss-clean');
+const sanitizeHtml = require('sanitize-html');
 const NyaDB = require('@decaded/nyadb');
 
 const app = express();
@@ -14,35 +14,34 @@ const port = process.env.PORT;
 
 // Initialize NyaDB
 const nyadb = new NyaDB();
-nyadb.create('scores'); // Create a database for scores (initializes as {})
+nyadb.create('scores');
 
 // Security Middleware
-app.use(helmet()); // Sets secure headers
-app.use(xss()); // Prevents XSS attacks
+app.use(helmet());
+app.use(xss());
 
 // CORS Config
 app.use(
 	cors({
-		origin: 'https://decaded.dev', // Allow requests from your website
-		methods: ['GET', 'POST'], // Allow only necessary methods
-		allowedHeaders: ['Content-Type'], // Explicitly allow necessary headers
-		credentials: true, // Allow credentials (cookies, authorization headers, etc.)
+		origin: 'https://decaded.dev',
+		methods: ['GET', 'POST'],
+		allowedHeaders: ['Content-Type'],
+		credentials: true,
 	}),
 );
 
 // Rate Limiting (10 requests per minute per IP)
 const apiLimiter = rateLimit({
-	windowMs: 60 * 1000, // 1 minute
-	max: 10, // Limit each IP to 10 requests per window
+	windowMs: 60 * 1000,
+	max: 10,
 	message: { success: false, message: 'Too many requests. Please try again later.' },
 });
 
-app.use(apiLimiter); // Apply globally
-
+app.use(apiLimiter);
 app.use(bodyParser.json());
 app.use(express.static('public'));
 
-// Save Score Endpoint (with Validation and Sanitization)
+// Save Score Endpoint
 app.post(
 	'/saveScore',
 	[
@@ -59,41 +58,36 @@ app.post(
 			return res.status(400).json({ success: false, message: errors.array()[0].msg });
 		}
 
-		const nick = req.body.nick; // Already sanitized by express-validator
+		const nick = req.body.nick;
 		const score = req.body.score;
 
-		// Get existing scores (default to {} if no scores exist)
 		const scores = nyadb.get('scores') || {};
 
-		// Check if the player already exists
 		if (scores[nick]) {
 			if (score > scores[nick]) {
-				scores[nick] = score; // Update score if it's higher
+				scores[nick] = score;
 				res.json({ success: true, message: 'Score updated successfully' });
 			} else {
 				res.json({ success: false, message: 'You did not beat your previous score' });
 			}
 		} else {
-			scores[nick] = score; // Add new player
+			scores[nick] = score;
 			res.json({ success: true, message: 'Score saved successfully' });
 		}
 
-		// Save the updated scores
 		nyadb.set('scores', scores);
 	},
 );
 
-// Get Top 10 Players Endpoint (with Output Sanitization)
+// Get Top 10 Players Endpoint
 app.get('/getTopPlayers', (req, res) => {
 	const scores = nyadb.get('scores') || {};
 
-	// Convert scores object to an array of { nick, score } objects
 	const scoresArray = Object.keys(scores).map(nick => ({
-		nick: sanitizeHtml(nick), // Sanitize nick for output
+		nick: sanitizeHtml(nick),
 		score: scores[nick],
 	}));
 
-	// Sort by score (descending) and get the top 10
 	const topPlayers = scoresArray.sort((a, b) => b.score - a.score).slice(0, 10);
 
 	res.json(topPlayers);
