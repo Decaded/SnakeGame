@@ -67,19 +67,7 @@ function draw() {
 }
 
 function endGame() {
-	const nick = prompt('Game Over! Enter your nickname:');
-	if (nick) {
-		saveScore(nick, score).then(response => {
-			if (response && response.success) {
-				alert(`${response.message}`);
-			} else {
-				alert(`${response.message}`);
-			}
-		});
-	} else {
-		alert('Game Over! You did not enter a nickname.');
-	}
-	resetGame();
+	showGameOverModal();
 }
 
 function resetGame() {

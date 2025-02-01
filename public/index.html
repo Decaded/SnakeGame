@@ -6,43 +6,256 @@
 			name="viewport"
 			content="width=device-width, initial-scale=1.0"
 		/>
-		<title>Snake Game</title>
+		<title>Modern Snake Game</title>
+		<link
+			href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap"
+			rel="stylesheet"
+		/>
 		<style>
 			body {
 				display: flex;
+				flex-direction: column;
 				justify-content: center;
 				align-items: center;
 				height: 100vh;
 				margin: 0;
-				background-color: #000;
+				background: linear-gradient(135deg, #1a1a1a, #333);
 				color: #fff;
-				font-family: Arial, sans-serif;
+				font-family: 'Press Start 2P', cursive;
+				text-align: center;
 			}
+
+			#gameContainer {
+				display: flex;
+				align-items: center;
+				padding: 20px;
+				border-radius: 15px;
+				background: rgba(0, 0, 0, 0.7);
+				box-shadow: 0 0 15px rgba(0, 255, 0, 0.5);
+			}
+
 			canvas {
-				border: 1px solid #fff;
+				border-radius: 8px;
+				background: #000;
+				border: 3px solid #00ff00;
+				box-shadow: 0 0 20px rgba(0, 255, 0, 0.8);
 			}
-			#leaderboard {
+
+			#sideContainer {
+				display: flex;
+				flex-direction: column;
+				align-items: center;
 				margin-left: 20px;
-				width: 150px;
 			}
+
+			#controls {
+				display: none;
+				flex-direction: column;
+				align-items: center;
+				margin-bottom: 20px;
+			}
+
+			.control-btn {
+				width: 60px;
+				height: 60px;
+				background: #00ff00;
+				border: none;
+				border-radius: 50%;
+				font-size: 1.5em;
+				font-family: 'Press Start 2P', cursive;
+				color: #000;
+				cursor: pointer;
+				box-shadow: 0 0 10px rgba(0, 255, 0, 0.8);
+			}
+
+			#leaderboard {
+				margin-top: 20px;
+				width: 100%;
+				max-width: 300px;
+				background: rgba(0, 0, 0, 0.8);
+				padding: 15px;
+				border-radius: 10px;
+				box-shadow: 0 0 10px rgba(0, 255, 0, 0.5);
+			}
+
 			#leaderboard h2 {
-				margin: 0 0 10px 0;
+				margin-bottom: 10px;
+				font-size: 1.2em;
+				color: #00ff00;
 			}
+
 			#leaderboard ol {
-				padding-left: 20px;
+				padding: 0;
+				list-style-type: none;
+			}
+
+			#leaderboard ol li {
+				padding: 5px 0;
+				font-size: 0.9em;
+				color: #00ff00;
+				text-shadow: 0 0 5px rgba(0, 255, 0, 0.8);
+			}
+
+			#gameOverModal {
+				display: none;
+				position: fixed;
+				top: 50%;
+				left: 50%;
+				transform: translate(-50%, -50%);
+				background: rgba(0, 0, 0, 0.9);
+				padding: 20px;
+				border-radius: 10px;
+				box-shadow: 0 0 20px rgba(0, 255, 0, 0.8);
+				color: #fff;
+				text-align: center;
+				z-index: 1000;
+			}
+
+			#gameOverModal h2 {
+				margin-bottom: 20px;
+				font-size: 1.5em;
+				color: #00ff00;
+			}
+
+			#gameOverModal input {
+				padding: 10px;
+				margin-bottom: 20px;
+				width: 80%;
+				font-family: 'Press Start 2P', cursive;
+				font-size: 0.8em;
+				border: 2px solid #00ff00;
+				border-radius: 5px;
+				background: #000;
+				color: #fff;
+			}
+
+			#gameOverModal button {
+				padding: 10px 20px;
+				font-family: 'Press Start 2P', cursive;
+				font-size: 0.8em;
+				background: #00ff00;
+				border: none;
+				border-radius: 5px;
+				color: #000;
+				cursor: pointer;
+				box-shadow: 0 0 10px rgba(0, 255, 0, 0.8);
+			}
+
+			#gameOverModal button:hover {
+				background: #00cc00;
+			}
+
+			@media (max-width: 600px) {
+				canvas {
+					width: 90vw;
+					height: 90vw;
+				}
+
+				#gameContainer {
+					flex-direction: column;
+					align-items: center;
+				}
+
+				#sideContainer {
+					margin-left: 0;
+					margin-top: 20px;
+					display: flex;
+					flex-direction: column;
+					align-items: center;
+					order: 2;
+				}
+
+				#controls {
+					display: flex;
+					order: 1;
+					margin-bottom: 10px;
+				}
 			}
 		</style>
 	</head>
 	<body>
-		<canvas
-			id="gameCanvas"
-			width="400"
-			height="400"
-		></canvas>
-		<div id="leaderboard">
-			<h2>Top 10 Players</h2>
-			<ol id="topPlayers"></ol>
+		<div id="gameContainer">
+			<canvas
+				id="gameCanvas"
+				width="400"
+				height="400"
+			></canvas>
+			<div id="sideContainer">
+				<div id="controls">
+					<button
+						class="control-btn"
+						onclick="setDirection('up')"
+					>
+						▲
+					</button>
+					<div>
+						<button
+							class="control-btn"
+							onclick="setDirection('left')"
+						>
+							◀
+						</button>
+						<button
+							class="control-btn"
+							onclick="setDirection('right')"
+						>
+							▶
+						</button>
+					</div>
+					<button
+						class="control-btn"
+						onclick="setDirection('down')"
+					>
+						▼
+					</button>
+				</div>
+				<div id="leaderboard">
+					<h2>Top 10 Players</h2>
+					<ol id="topPlayers"></ol>
+				</div>
+			</div>
 		</div>
+
+		<!-- Game Over Modal -->
+		<div id="gameOverModal">
+			<h2>Game Over!</h2>
+			<input
+				type="text"
+				id="nicknameInput"
+				placeholder="Enter your nickname"
+				maxlength="16"
+			/>
+			<button onclick="submitScore()">Submit Score</button>
+		</div>
+
+		<script>
+			function setDirection(dir) {
+				const event = new KeyboardEvent('keydown', { key: dir === 'up' ? 'ArrowUp' : dir === 'down' ? 'ArrowDown' : dir === 'left' ? 'ArrowLeft' : 'ArrowRight' });
+				document.dispatchEvent(event);
+			}
+
+			function showGameOverModal() {
+				const modal = document.getElementById('gameOverModal');
+				modal.style.display = 'block';
+			}
+
+			function submitScore() {
+				const nick = document.getElementById('nicknameInput').value;
+				if (nick) {
+					saveScore(nick, score).then(response => {
+						if (response && response.success) {
+							alert(`${response.message}`);
+						} else {
+							alert(`${response.message}`);
+						}
+					});
+				} else {
+					alert('You did not enter a nickname.');
+				}
+				resetGame();
+				document.getElementById('gameOverModal').style.display = 'none';
+			}
+		</script>
 		<script src="snake.js"></script>
 	</body>
 </html>
