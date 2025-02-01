@@ -7,8 +7,6 @@ A classic Snake Game built with HTML, CSS, and JavaScript. The game features a l
 
 - **Classic Snake Gameplay**: Move the snake around the grid, eat food to grow, and avoid collisions with walls or yourself.
 - **Leaderboard**: Track the top 10 players' scores.
-- **Persistent Scores**: Scores are saved using NyaDB, a lightweight file-based database.
-- **Responsive Design**: The game is playable on both desktop and mobile devices.
 
 ## Technologies Used
 
