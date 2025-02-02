@@ -19,7 +19,7 @@ function startGameLoop() {
 			update();
 			draw();
 		}
-	}, 200); // 200ms interval (5 frames per second)
+	}, 90);
 }
 
 function update() {
