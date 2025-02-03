@@ -328,10 +328,10 @@ class UIManager {
 	}
 
 	async submitScore() {
-		// Hide the modal immediately.
+		const nick = this.nicknameInput.value.trim();
+
 		this.hideGameOverModal();
 
-		const nick = this.nicknameInput.value.trim();
 		if (!nick) {
 			showToast('Please enter a nickname', false);
 			// Always reset game even if no nickname is provided.
