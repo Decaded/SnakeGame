@@ -205,6 +205,7 @@ class SpeedController {
 			state.currentSpeed = Math.max(70, state.currentSpeed - 10);
 			state.speedIncreaseCounter = 0;
 			this.updateBorderColor(state);
+			this.updateLevelBar(state);
 		}
 	}
 
@@ -217,6 +218,17 @@ class SpeedController {
 
 		state.canvas.style.borderColor = `rgb(${red}, ${green}, 0)`;
 		state.canvas.style.boxShadow = `0 0 20px rgba(${red}, ${green}, 0, 0.8)`;
+	}
+
+	updateLevelBar(state) {
+		// Calculate fill ratio: at 150ms (start) the bar is 0%; at 70ms it's 100%
+		const minSpeed = 70;
+		const maxSpeed = 150;
+		const ratio = (maxSpeed - state.currentSpeed) / (maxSpeed - minSpeed);
+		const levelBar = document.getElementById('levelBar');
+		if (levelBar) {
+			levelBar.style.width = `${ratio * 100}%`;
+		}
 	}
 }
 
@@ -271,11 +283,12 @@ class UIManager {
 	constructor() {
 		this.gameOverModal = document.getElementById('gameOverModal');
 		this.nicknameInput = document.getElementById('nicknameInput');
+		this.submitScoreButton = document.getElementById('submitScoreButton');
 		this.setupEventListeners();
 	}
 
 	setupEventListeners() {
-		document.querySelector('#gameOverModal button').addEventListener('click', () => {
+		this.submitScoreButton.addEventListener('click', () => {
 			this.submitScore();
 		});
 	}
@@ -292,11 +305,16 @@ class UIManager {
 
 	async submitScore() {
 		const nick = this.nicknameInput.value.trim();
-		if (!nick) return alert('Please enter a nickname');
+		if (!nick) {
+			alert('Please enter a nickname');
+			return;
+		}
 
 		const result = await leaderboard.saveScore(nick, game.state.score);
 		alert(result.message);
 		this.hideGameOverModal();
+		// Restart the game after submitting score.
+		game.resetGame();
 	}
 }
 

@@ -131,6 +131,33 @@ canvas {
 	background: #00cc00;
 }
 
+#levelIndicator {
+	width: 300px;
+	height: 20px;
+	border: 2px solid #00ff00;
+	margin-bottom: 20px;
+	position: relative;
+}
+
+#levelBarContainer {
+	width: 100%;
+	height: 20px;
+	background: rgba(0, 0, 0, 0.5);
+	border-radius: 10px;
+	overflow: hidden;
+}
+
+#levelBar {
+	height: 100%;
+	width: 0%;
+	background: #00ff00;
+	transition: width 0.5s ease;
+}
+
+#levelNumber {
+	color: #00ff00;
+}
+
 @media (max-width: 600px) {
 	canvas {
 		width: 90vw;

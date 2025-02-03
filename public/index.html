@@ -15,6 +15,10 @@
 			rel="stylesheet"
 			href="style.css"
 		/>
+		<link
+			rel="icon"
+			href="favicon.png"
+		/>
 	</head>
 	<body>
 		<div id="gameContainer">
@@ -24,6 +28,10 @@
 				height="400"
 			></canvas>
 			<div id="sideContainer">
+				<!-- Level Indicator -->
+				<div id="levelIndicator">
+					<div id="levelBar"></div>
+				</div>
 				<div id="controls">
 					<button
 						class="control-btn"
@@ -68,37 +76,10 @@
 				placeholder="Enter your nickname"
 				maxlength="16"
 			/>
-			<button onclick="submitScore()">Submit Score</button>
+			<button id="submitScoreButton">Submit Score</button>
 		</div>
 
-		<script>
-			function setDirection(dir) {
-				const event = new KeyboardEvent('keydown', { key: dir === 'up' ? 'ArrowUp' : dir === 'down' ? 'ArrowDown' : dir === 'left' ? 'ArrowLeft' : 'ArrowRight' });
-				document.dispatchEvent(event);
-			}
-
-			function showGameOverModal() {
-				const modal = document.getElementById('gameOverModal');
-				modal.style.display = 'block';
-			}
-
-			function submitScore() {
-				const nick = document.getElementById('nicknameInput').value;
-				if (nick) {
-					saveScore(nick, score).then(response => {
-						if (response && response.success) {
-							alert(`${response.message}`);
-						} else {
-							alert(`${response.message}`);
-						}
-					});
-				} else {
-					alert('You did not enter a nickname.');
-				}
-				resetGame();
-				document.getElementById('gameOverModal').style.display = 'none';
-			}
-		</script>
 		<script src="js/snake.js"></script>
+		<script src="js/controlls.js"></script>
 	</body>
 </html>
