@@ -5,3 +5,16 @@ function setDirection(dir) {
 	const event = new KeyboardEvent('keydown', { key });
 	document.dispatchEvent(event);
 }
+
+// Global function to show toast notifications.
+function showToast(message, isSuccess = true) {
+	const toast = document.getElementById('toast');
+	toast.textContent = message;
+	toast.className = isSuccess ? 'toast success' : 'toast error';
+	toast.style.opacity = 1;
+
+	// Automatically hide the toast after 3 seconds.
+	setTimeout(() => {
+		toast.style.opacity = 0;
+	}, 3000);
+}

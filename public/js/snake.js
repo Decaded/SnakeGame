@@ -12,6 +12,7 @@ class GameState {
 		this.food = this.randomFoodPosition();
 		this.score = 0;
 		this.gameOver = false;
+		this.modalShown = false;
 		this.currentSpeed = 150;
 		this.speedIncreaseCounter = 0;
 		this.gameLoopTimeout = null;
@@ -108,11 +109,26 @@ class GameCore {
 	}
 
 	resetGame() {
-		this.state = new GameState();
-		this.modules.forEach(module => module.reset?.());
+		// Cancel the previous game loop timeout, if any.
 		if (this.state.gameLoopTimeout) {
 			clearTimeout(this.state.gameLoopTimeout);
+			this.state.gameLoopTimeout = null;
 		}
+		ui.hideGameOverModal();
+
+		// Reset properties on the same game state.
+		this.state.snake = [{ x: 10, y: 10 }];
+		this.state.direction = { x: 0, y: 0 };
+		this.state.lastProcessedDirection = { x: 0, y: 0 };
+		this.state.queuedDirection = null;
+		this.state.food = this.state.randomFoodPosition();
+		this.state.score = 0;
+		this.state.gameOver = false;
+		this.state.modalShown = false;
+		this.state.currentSpeed = 150;
+		this.state.speedIncreaseCounter = 0;
+
+		// Start the new game loop.
 		this.startGameLoop();
 	}
 }
@@ -189,8 +205,11 @@ class CollisionDetector {
 	}
 
 	endGame(state) {
-		state.gameOver = true;
-		showGameOverModal();
+		if (!state.modalShown) {
+			state.modalShown = true;
+			state.gameOver = true;
+			showGameOverModal();
+		}
 	}
 }
 
@@ -291,6 +310,11 @@ class UIManager {
 		this.submitScoreButton.addEventListener('click', () => {
 			this.submitScore();
 		});
+		this.nicknameInput.addEventListener('keydown', e => {
+			if (e.key === 'Enter') {
+				this.submitScore();
+			}
+		});
 	}
 
 	showGameOverModal() {
@@ -304,16 +328,20 @@ class UIManager {
 	}
 
 	async submitScore() {
+		// Hide the modal immediately.
+		this.hideGameOverModal();
+
 		const nick = this.nicknameInput.value.trim();
 		if (!nick) {
-			alert('Please enter a nickname');
+			showToast('Please enter a nickname', false);
+			// Always reset game even if no nickname is provided.
+			game.resetGame();
 			return;
 		}
 
 		const result = await leaderboard.saveScore(nick, game.state.score);
-		alert(result.message);
-		this.hideGameOverModal();
-		// Restart the game after submitting score.
+		showToast(result.message, result.success);
+		// Always reset game regardless of the result.
 		game.resetGame();
 	}
 }
