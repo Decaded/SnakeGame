@@ -18,3 +18,39 @@ function showToast(message, isSuccess = true) {
 		toast.style.opacity = 0;
 	}, 3000);
 }
+
+// Mobile control event listeners (supporting touch)
+document.getElementById('upBtn').addEventListener('touchstart', e => {
+	e.preventDefault(); // Prevents ghost clicks
+	setDirection('up');
+});
+document.getElementById('downBtn').addEventListener('touchstart', e => {
+	e.preventDefault();
+	setDirection('down');
+});
+document.getElementById('leftBtn').addEventListener('touchstart', e => {
+	e.preventDefault();
+	setDirection('left');
+});
+document.getElementById('rightBtn').addEventListener('touchstart', e => {
+	e.preventDefault();
+	setDirection('right');
+});
+
+// (Optional) Also add click events to support desktop interactions:
+document.getElementById('upBtn').addEventListener('click', () => setDirection('up'));
+document.getElementById('downBtn').addEventListener('click', () => setDirection('down'));
+document.getElementById('leftBtn').addEventListener('click', () => setDirection('left'));
+document.getElementById('rightBtn').addEventListener('click', () => setDirection('right'));
+
+// Leaderboard Toggle Button functionality
+document.getElementById('toggleLeaderboardButton').addEventListener('click', function () {
+	const leaderboardEl = document.getElementById('leaderboard');
+	if (leaderboardEl.style.display === 'none' || leaderboardEl.style.display === '') {
+		leaderboardEl.style.display = 'block';
+		this.textContent = 'Hide Leaderboard';
+	} else {
+		leaderboardEl.style.display = 'none';
+		this.textContent = 'Show Leaderboard';
+	}
+});

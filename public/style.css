@@ -5,6 +5,8 @@ body {
 	align-items: center;
 	height: 100vh;
 	margin: 0;
+	padding: 0;
+	overflow-x: hidden;
 	background: linear-gradient(135deg, #1a1a1a, #333);
 	color: #fff;
 	font-family: 'Press Start 2P', cursive;
@@ -35,10 +37,22 @@ canvas {
 }
 
 #controls {
-	display: none;
+	display: flex;
 	flex-direction: column;
 	align-items: center;
-	margin-bottom: 20px;
+	justify-content: center;
+	position: fixed;
+	bottom: 20px;
+	left: 50%;
+	transform: translateX(-50%);
+	z-index: 1000;
+}
+
+#controls #sideControls {
+	display: flex;
+	justify-content: center;
+	width: 100%;
+	margin-top: 5px;
 }
 
 .control-btn {
@@ -52,6 +66,7 @@ canvas {
 	color: #000;
 	cursor: pointer;
 	box-shadow: 0 0 10px rgba(0, 255, 0, 0.8);
+	margin: 0 10px;
 }
 
 #leaderboard {
@@ -80,6 +95,23 @@ canvas {
 	font-size: 0.9em;
 	color: #00ff00;
 	text-shadow: 0 0 5px rgba(0, 255, 0, 0.8);
+}
+
+#toggleLeaderboardButton {
+	padding: 10px 20px;
+	font-family: 'Press Start 2P', cursive;
+	font-size: 0.8em;
+	background: #00ff00;
+	border: none;
+	border-radius: 5px;
+	color: #000;
+	cursor: pointer;
+	box-shadow: 0 0 10px rgba(0, 255, 0, 0.8);
+	margin-bottom: 10px;
+}
+
+#toggleLeaderboardButton:hover {
+	background: #00cc00;
 }
 
 #gameOverModal {
@@ -204,5 +236,11 @@ canvas {
 		display: flex;
 		order: 1;
 		margin-bottom: 10px;
+	}
+}
+
+@media (min-width: 601px) {
+	#controls {
+		display: none;
 	}
 }
