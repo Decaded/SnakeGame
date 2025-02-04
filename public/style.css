@@ -224,9 +224,23 @@ canvas {
 }
 
 /* If the device is detected as mobile, force mobile controls */
-body.mobile-device #controls,
-body.mobile-device #toggleLeaderboardButton {
-	display: flex !important;
+/* Default mobile layout: stacked */
+body.mobile-device #gameUI {
+	flex-direction: column;
+}
+
+/* Tablet layout: use a two-column approach, similar to desktop but perhaps with slightly adjusted proportions */
+body.tablet-device #gameUI {
+	flex-direction: row;
+}
+
+body.tablet-device #gameSection {
+	flex: 1;
+	margin-right: 10px;
+}
+
+body.tablet-device #infoSection {
+	flex: 1;
 }
 
 /* MOBILE VIEW (max-width: 600px) */
