@@ -356,7 +356,7 @@ class UIManager {
 		this.hideGameOverModal();
 
 		if (!nick) {
-			showToast('Please enter a nickname', false);
+			showToast('No nick provided, restarting game.', false);
 			// Always reset game even if no nickname is provided.
 			game.resetGame();
 			return;
