@@ -7,7 +7,7 @@ class GameState {
 		this.snake = [{ x: 10, y: 10 }];
 		this.direction = { x: 0, y: 0 };
 		this.lastProcessedDirection = { x: 0, y: 0 };
-		this.queuedDirection = null;
+		this.directionQueue = [];
 		this.food = this.randomFoodPosition();
 		this.score = 0;
 		this.gameOver = false;
@@ -72,12 +72,6 @@ class GameCore {
 	update() {
 		if (this.state.gameOver) return;
 
-		if (this.state.queuedDirection) {
-			this.state.direction = this.state.queuedDirection;
-			this.state.lastProcessedDirection = this.state.queuedDirection;
-			this.state.queuedDirection = null;
-		}
-
 		const head = {
 			x: this.state.snake[0].x + this.state.direction.x,
 			y: this.state.snake[0].y + this.state.direction.y,
@@ -88,29 +82,29 @@ class GameCore {
 		if (head.x === this.state.food.x && head.y === this.state.food.y) {
 			// Handle power-up effects
 			if (this.state.foodType === 'cherry') {
-					this.state.comboActive = true;
-					this.state.comboCounter = 3; // 3 foods with double points
-					showToast('DOUBLE POINTS ACTIVATED!', true);
+				this.state.comboActive = true;
+				this.state.comboCounter = 3; // 3 foods with double points
+				showToast('DOUBLE POINTS ACTIVATED!', true);
 			}
-	
+
 			// Calculate score with combo
 			const points = this.state.comboActive ? 2 : 1;
 			this.state.score += points;
-			
+
 			// Update combo counter
 			if (this.state.comboActive) {
-					this.state.comboCounter--;
-					if (this.state.comboCounter <= 0) {
-							this.state.comboActive = false;
-							showToast('COMBO ENDED', false);
-					}
+				this.state.comboCounter--;
+				if (this.state.comboCounter <= 0) {
+					this.state.comboActive = false;
+					showToast('COMBO ENDED', false);
+				}
 			}
-	
+
 			this.state.speedIncreaseCounter++;
 			this.state.food = this.state.randomFoodPosition();
-	} else {
+		} else {
 			this.state.snake.pop();
-	}
+		}
 	}
 
 	draw() {
@@ -163,7 +157,7 @@ class GameCore {
 		this.state.snake = [{ x: 10, y: 10 }];
 		this.state.direction = { x: 0, y: 0 };
 		this.state.lastProcessedDirection = { x: 0, y: 0 };
-		this.state.queuedDirection = null;
+		this.state.directionQueue = []; // Reset directionQueue
 		this.state.food = this.state.randomFoodPosition();
 		this.state.score = 0;
 		this.state.gameOver = false;
@@ -213,22 +207,31 @@ class InputHandler {
 				break;
 		}
 
-		if (newDirection && !this.state.queuedDirection) {
-			const isOpposite =
-				(this.state.lastProcessedDirection.x !== 0 && newDirection.x === -this.state.lastProcessedDirection.x) ||
-				(this.state.lastProcessedDirection.y !== 0 && newDirection.y === -this.state.lastProcessedDirection.y);
-
-			if (!isOpposite) {
-				this.state.queuedDirection = newDirection;
-			}
+		if (newDirection) {
+			this.state.directionQueue.push(newDirection);
 		}
 	}
 
 	processInput(state) {
-		if (state.queuedDirection) {
-			state.direction = state.queuedDirection;
-			state.lastProcessedDirection = state.queuedDirection;
-			state.queuedDirection = null;
+		if (state.directionQueue.length === 0) return;
+
+		let selectedIndex = -1;
+		for (let i = 0; i < state.directionQueue.length; i++) {
+			const dir = state.directionQueue[i];
+			const isOpposite =
+				(state.lastProcessedDirection.x !== 0 && dir.x === -state.lastProcessedDirection.x) || (state.lastProcessedDirection.y !== 0 && dir.y === -state.lastProcessedDirection.y);
+
+			if (!isOpposite) {
+				selectedIndex = i;
+				break;
+			}
+		}
+
+		if (selectedIndex >= 0) {
+			const selectedDir = state.directionQueue[selectedIndex];
+			state.direction = selectedDir;
+			state.lastProcessedDirection = selectedDir;
+			state.directionQueue.splice(0, selectedIndex + 1);
 		}
 	}
 }
