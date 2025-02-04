@@ -15,9 +15,9 @@ const Config = {
 	},
 	Food: {
 		SPAWN_PROBABILITIES: {
-			apple: 0.7,
-			cherry: 0.2,
-			goldenApple: 0.1,
+			apple: 0.85,
+			cherry: 0.1,
+			goldenApple: 0.05,
 		},
 		PROPERTIES: {
 			apple: {
@@ -140,6 +140,7 @@ class GameEngine {
 
 	addModule(module) {
 		this.modules.push(module);
+		module.game = this;
 		module.init?.(this.state);
 	}
 
@@ -213,6 +214,7 @@ class GameEngine {
 					active: true,
 					remaining: effect.duration,
 				};
+				showToast(effect.message);
 				break;
 			case 'doubleScore':
 				this.state.score *= 2;
@@ -220,6 +222,7 @@ class GameEngine {
 					active: true,
 					endTime: Date.now() + effect.duration,
 				};
+				showToast(effect.message);
 				break;
 		}
 	}
@@ -517,7 +520,8 @@ class LeaderboardManager {
 // UI Manager
 // ======================
 class UIManager {
-	constructor() {
+	constructor(game) {
+		this.game = game;
 		this.elements = {
 			gameOverModal: document.getElementById('gameOverModal'),
 			nicknameInput: document.getElementById('nicknameInput'),
@@ -566,33 +570,65 @@ class UIManager {
 
 	async handleScoreSubmission() {
 		const nickname = this.elements.nicknameInput.value.trim();
-		this.toggleModal(false);
 
 		if (!nickname) {
 			showToast('No nickname entered - score not saved', false);
-			this.state.game.reset();
+			this.toggleModal(false);
+			this.game.reset();
 			return;
 		}
 
-		const result = await this.state.leaderboard.saveScore(nickname, this.state.score);
-		showToast(result.message, result.success);
-		this.state.game.reset();
+		try {
+			const result = await leaderboard.saveScore(nickname, this.game.state.score);
+			showToast(result.message, result.success);
+		} catch (error) {
+			showToast('Failed to save score', false);
+		}
+
+		this.toggleModal(false);
+		this.game.reset();
 	}
 
 	toggleModal(show = true) {
 		this.elements.gameOverModal.style.display = show ? 'block' : 'none';
-		if (!show) {
-			// Modal is closing—restart the game.
-			game.reset();
-		} else {
+		if (show) {
 			this.elements.nicknameInput.focus();
 		}
 	}
 
+	toggleModal(show = true) {
+		this.elements.gameOverModal.style.display = show ? 'block' : 'none';
+		if (show) {
+			this.elements.nicknameInput.focus();
+		} else {
+			this.game.reset(); // Reset game state when modal is closed
+		}
+	}
+
 	updateComboDisplay() {
-		const { combo } = this.state.effects;
-		this.elements.comboCounter.style.display = combo.active ? 'block' : 'none';
-		this.elements.comboCounter.textContent = `COMBO x2 (${combo.remaining} left)`;
+		const container = document.getElementById('messageContainer');
+
+		// Clear previous status messages
+		const existingStatus = container.querySelectorAll('.status-message');
+		existingStatus.forEach(el => el.remove());
+
+		// Add persistent status messages
+		const { combo, glow } = this.state.effects;
+
+		if (combo.active) {
+			const message = document.createElement('div');
+			message.className = 'game-message status-message';
+			message.textContent = `COMBO x2 (${combo.remaining} left)`;
+			container.appendChild(message);
+		}
+
+		if (glow.active) {
+			const remaining = Math.ceil((glow.endTime - Date.now()) / 1000);
+			const message = document.createElement('div');
+			message.className = 'game-message status-message';
+			message.textContent = `GOLDEN GLOW: ${remaining}s`;
+			container.appendChild(message);
+		}
 	}
 
 	updateLevelDisplay() {
@@ -623,7 +659,7 @@ function showGameOverModal() {
 // ======================
 const game = new GameEngine();
 const leaderboard = new LeaderboardManager();
-const ui = new UIManager();
+const ui = new UIManager(game);
 
 game.addModule(leaderboard);
 game.addModule(ui);

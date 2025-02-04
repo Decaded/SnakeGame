@@ -8,15 +8,13 @@ function setDirection(dir) {
 
 // Global function to show toast notifications.
 function showToast(message, isSuccess = true) {
-	const toast = document.getElementById('toast');
-	toast.textContent = message;
-	toast.className = isSuccess ? 'toast success' : 'toast error';
-	toast.style.opacity = 1;
+	const container = document.getElementById('messageContainer');
+	const messageEl = document.createElement('div');
+	messageEl.className = `game-message ${isSuccess ? 'success' : 'error'}`;
+	messageEl.textContent = message;
 
-	// Automatically hide the toast after 3 seconds.
-	setTimeout(() => {
-		toast.style.opacity = 0;
-	}, 3000);
+	container.appendChild(messageEl);
+	setTimeout(() => messageEl.remove(), 3000);
 }
 
 // Mobile control event listeners (supporting touch)
