@@ -4,9 +4,10 @@
 		<meta charset="UTF-8" />
 		<meta
 			name="viewport"
-			content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no"
+			content="width=device-width, initial-scale=1.0"
 		/>
 		<title>Snake Game</title>
+
 		<!-- Fonts & CSS -->
 		<link
 			href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap"
@@ -16,28 +17,108 @@
 			rel="stylesheet"
 			href="style.css"
 		/>
+
 		<!-- Favicon -->
 		<link
 			rel="icon"
-			href="icon.png"
+			href="https://decaded.dev/dev/SnakeGame/icon.png"
 		/>
-		<!-- Open Graph / Twitter meta tags here if needed -->
+
+		<!-- Open Graph / Facebook / Discord -->
+		<meta
+			property="og:type"
+			content="website"
+		/>
+		<meta
+			property="og:url"
+			content="https://decaded.dev/dev/SnakeGame/"
+		/>
+		<meta
+			property="og:title"
+			content="Snake Game"
+		/>
+		<meta
+			property="og:description"
+			content="Play the retro-inspired Snake Game and beat your high score!"
+		/>
+		<meta
+			property="og:image"
+			content="https://decaded.dev/dev/SnakeGame/icon.png"
+		/>
+
+		<!-- Twitter -->
+		<meta
+			name="twitter:card"
+			content="summary_large_image"
+		/>
+		<meta
+			name="twitter:url"
+			content="https://decaded.dev/dev/SnakeGame/"
+		/>
+		<meta
+			name="twitter:title"
+			content="Snake Game"
+		/>
+		<meta
+			name="twitter:description"
+			content="Play the retro-inspired Snake Game and beat your high score!"
+		/>
+		<meta
+			name="twitter:image"
+			content="https://decaded.dev/dev/SnakeGame/icon.png"
+		/>
 	</head>
 	<body>
-		<div id="gameContainer">
-			<canvas
-				id="gameCanvas"
-				width="400"
-				height="400"
-			></canvas>
-			<div id="sideContainer">
-				<!-- Level Indicator -->
+		<!-- Main UI container: its layout will change based on viewport -->
+		<div id="gameUI">
+			<!-- For mobile: top section (level indicator + game canvas) -->
+			<!-- For desktop: left column (game & level indicator) -->
+			<div id="gameSection">
 				<div id="levelIndicator">
 					<div id="levelBar"></div>
 				</div>
-				<!-- Toggle Leaderboard Button -->
+				<canvas
+					id="gameCanvas"
+					width="400"
+					height="400"
+				></canvas>
+			</div>
+
+			<!-- For mobile: bottom section (controls + leaderboard button + leaderboard) -->
+			<!-- For desktop: right column (leaderboard always visible) -->
+			<div id="infoSection">
+				<!-- Mobile controls -->
+				<div id="controls">
+					<button
+						class="control-btn"
+						id="upBtn"
+					>
+						▲
+					</button>
+					<div id="sideControls">
+						<button
+							class="control-btn"
+							id="leftBtn"
+						>
+							◀
+						</button>
+						<button
+							class="control-btn"
+							id="downBtn"
+						>
+							▼
+						</button>
+						<button
+							class="control-btn"
+							id="rightBtn"
+						>
+							▶
+						</button>
+					</div>
+				</div>
+				<!-- Leaderboard toggle button (only used in mobile view) -->
 				<button id="toggleLeaderboardButton">Show Leaderboard</button>
-				<!-- Leaderboard (hidden by default) -->
+				<!-- Leaderboard container -->
 				<div
 					id="leaderboard"
 					style="display: none"
@@ -45,36 +126,6 @@
 					<h2>Top 10 Players</h2>
 					<ol id="topPlayers"></ol>
 				</div>
-			</div>
-		</div>
-
-		<!-- Mobile Controls (positioned at the bottom of the viewport) -->
-		<div id="controls">
-			<button
-				class="control-btn"
-				id="upBtn"
-			>
-				▲
-			</button>
-			<div id="sideControls">
-				<button
-					class="control-btn"
-					id="leftBtn"
-				>
-					◀
-				</button>
-				<button
-					class="control-btn"
-					id="downBtn"
-				>
-					▼
-				</button>
-				<button
-					class="control-btn"
-					id="rightBtn"
-				>
-					▶
-				</button>
 			</div>
 		</div>
 

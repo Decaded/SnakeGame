@@ -1,27 +1,38 @@
 body {
 	display: flex;
-	flex-direction: column;
 	justify-content: center;
 	align-items: center;
-	height: 100vh;
 	margin: 0;
 	padding: 0;
-	overflow-x: hidden;
+	height: 100vh;
 	background: linear-gradient(135deg, #1a1a1a, #333);
 	color: #fff;
 	font-family: 'Press Start 2P', cursive;
 	text-align: center;
+	overflow-x: hidden;
 }
 
-#gameContainer {
+/* The main container for both mobile and desktop */
+#gameUI {
+	width: 100%;
+	height: 100%;
 	display: flex;
+	flex-direction: column; /* Default to mobile stacking */
+}
+
+/* Game section (level indicator and canvas) */
+#gameSection {
+	display: flex;
+	flex-direction: column;
 	align-items: center;
-	padding: 20px;
-	border-radius: 15px;
+	justify-content: center;
+	padding: 10px;
 	background: rgba(0, 0, 0, 0.7);
+	border-radius: 15px;
 	box-shadow: 0 0 15px rgba(0, 255, 0, 0.5);
 }
 
+/* Canvas styles */
 canvas {
 	border-radius: 8px;
 	background: #000;
@@ -29,32 +40,49 @@ canvas {
 	box-shadow: 0 0 20px rgba(0, 255, 0, 0.8);
 }
 
-#sideContainer {
-	display: flex;
-	flex-direction: column;
-	align-items: center;
-	margin-left: 20px;
+/* Level indicator styling */
+#levelIndicator {
+	width: 300px;
+	height: 20px;
+	border: 2px solid #00ff00;
+	margin-bottom: 10px;
+	position: relative;
 }
 
-#controls {
+/* Level bar inside indicator */
+#levelBar {
+	height: 100%;
+	width: 0%;
+	background: #00ff00;
+	transition: width 0.5s ease;
+}
+
+/* Info section: holds controls and leaderboard (mobile) or just leaderboard (desktop) */
+#infoSection {
 	display: flex;
 	flex-direction: column;
 	align-items: center;
 	justify-content: center;
-	position: fixed;
-	bottom: 20px;
-	left: 50%;
-	transform: translateX(-50%);
-	z-index: 1000;
+	padding: 10px;
 }
 
-#controls #sideControls {
+/* Mobile controls */
+#controls {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	margin-bottom: 10px;
+}
+
+/* Side controls row */
+#sideControls {
 	display: flex;
 	justify-content: center;
 	width: 100%;
 	margin-top: 5px;
 }
 
+/* Control button styling */
 .control-btn {
 	width: 60px;
 	height: 60px;
@@ -69,8 +97,9 @@ canvas {
 	margin: 0 10px;
 }
 
+/* Leaderboard styles */
 #leaderboard {
-	margin-top: 20px;
+	margin-top: 10px;
 	width: 100%;
 	max-width: 300px;
 	background: rgba(0, 0, 0, 0.8);
@@ -97,6 +126,7 @@ canvas {
 	text-shadow: 0 0 5px rgba(0, 255, 0, 0.8);
 }
 
+/* Leaderboard toggle button styling */
 #toggleLeaderboardButton {
 	padding: 10px 20px;
 	font-family: 'Press Start 2P', cursive;
@@ -107,7 +137,7 @@ canvas {
 	color: #000;
 	cursor: pointer;
 	box-shadow: 0 0 10px rgba(0, 255, 0, 0.8);
-	margin-bottom: 10px;
+	margin-top: 10px;
 }
 
 #toggleLeaderboardButton:hover {
@@ -163,33 +193,6 @@ canvas {
 	background: #00cc00;
 }
 
-#levelIndicator {
-	width: 300px;
-	height: 20px;
-	border: 2px solid #00ff00;
-	margin-bottom: 20px;
-	position: relative;
-}
-
-#levelBarContainer {
-	width: 100%;
-	height: 20px;
-	background: rgba(0, 0, 0, 0.5);
-	border-radius: 10px;
-	overflow: hidden;
-}
-
-#levelBar {
-	height: 100%;
-	width: 0%;
-	background: #00ff00;
-	transition: width 0.5s ease;
-}
-
-#levelNumber {
-	color: #00ff00;
-}
-
 #toast {
 	position: fixed;
 	bottom: 20px;
@@ -212,35 +215,59 @@ canvas {
 	border: 2px solid #ff0000;
 }
 
+/* MOBILE VIEW (max-width: 600px) */
 @media (max-width: 600px) {
-	canvas {
-		width: 90vw;
-		height: 90vw;
-	}
-
-	#gameContainer {
+	#gameUI {
 		flex-direction: column;
-		align-items: center;
 	}
 
-	#sideContainer {
-		margin-left: 0;
-		margin-top: 20px;
+	/* Top half: assign about 50% height to gameSection */
+	#gameSection {
+		flex: 1;
+		justify-content: flex-end; /* So level indicator sits above the canvas */
+	}
+
+	/* Bottom half: infoSection (controls & leaderboard) takes the rest */
+	#infoSection {
+		flex: 1;
 		display: flex;
 		flex-direction: column;
-		align-items: center;
-		order: 2;
+		justify-content: flex-start;
 	}
 
-	#controls {
-		display: flex;
-		order: 1;
-		margin-bottom: 10px;
+	/* Show toggle button for leaderboard */
+	#toggleLeaderboardButton {
+		display: block;
 	}
 }
 
+/* DESKTOP VIEW (min-width: 601px) */
 @media (min-width: 601px) {
-	#controls {
+	#gameUI {
+		flex-direction: row;
+	}
+
+	/* Left column: gameSection takes most space */
+	#gameSection {
+		flex: 2;
+		margin-right: 20px;
+	}
+
+	/* Right column: infoSection only shows leaderboard; hide controls and toggle button */
+	#infoSection {
+		flex: 1;
+		display: flex;
+		flex-direction: column;
+		justify-content: flex-start;
+		align-items: center;
+	}
+	#controls,
+	#toggleLeaderboardButton {
 		display: none;
+	}
+
+	/* Leaderboard always visible on desktop */
+	#leaderboard {
+		display: block !important;
 	}
 }
