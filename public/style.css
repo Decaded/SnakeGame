@@ -215,6 +215,20 @@ canvas {
 	border: 2px solid #ff0000;
 }
 
+/* Default media query layout */
+@media (min-width: 601px) {
+	#controls,
+	#toggleLeaderboardButton {
+		display: none;
+	}
+}
+
+/* If the device is detected as mobile, force mobile controls */
+body.mobile-device #controls,
+body.mobile-device #toggleLeaderboardButton {
+	display: flex !important;
+}
+
 /* MOBILE VIEW (max-width: 600px) */
 @media (max-width: 600px) {
 	#gameUI {

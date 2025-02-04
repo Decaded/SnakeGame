@@ -54,3 +54,13 @@ document.getElementById('toggleLeaderboardButton').addEventListener('click', fun
 		this.textContent = 'Show Leaderboard';
 	}
 });
+
+function isMobileDevice() {
+	return /Mobi|Android/i.test(navigator.userAgent);
+}
+
+if (isMobileDevice()) {
+	document.body.classList.add('mobile-device');
+} else {
+	document.body.classList.add('desktop-device');
+}
