@@ -69,10 +69,9 @@
 		/>
 	</head>
 	<body>
-		<!-- Main UI container: its layout will change based on viewport -->
+		<!-- Main UI container -->
 		<div id="gameUI">
-			<!-- For mobile: top section (level indicator + game canvas) -->
-			<!-- For desktop: left column (game & level indicator) -->
+			<!-- Game Section -->
 			<div id="gameSection">
 				<div id="levelIndicator">
 					<div id="levelBar"></div>
@@ -84,10 +83,9 @@
 				></canvas>
 			</div>
 
-			<!-- For mobile: bottom section (controls + leaderboard button + leaderboard) -->
-			<!-- For desktop: right column (leaderboard always visible) -->
+			<!-- Info Section -->
 			<div id="infoSection">
-				<!-- Mobile controls -->
+				<!-- Mobile controls (for mobile only) -->
 				<div id="controls">
 					<button
 						class="control-btn"
@@ -116,7 +114,7 @@
 						</button>
 					</div>
 				</div>
-				<!-- Leaderboard toggle button (only used in mobile view) -->
+				<!-- Leaderboard toggle button (only in mobile view) -->
 				<button id="toggleLeaderboardButton">Show Leaderboard</button>
 				<!-- Leaderboard container -->
 				<div
@@ -125,6 +123,32 @@
 				>
 					<h2>Top 10 Players</h2>
 					<ol id="topPlayers"></ol>
+				</div>
+
+				<!-- Legend and Links for Desktop -->
+				<div id="legendAndLinks">
+					<div id="legend">
+						<h3>How to Play</h3>
+						<ul>
+							<li>Use arrow keys to move (or touch controls on mobile).</li>
+							<li>Avoid the walls and your own tail.</li>
+							<li>Eat food to grow and score points!</li>
+						</ul>
+						<br />
+					</div>
+					<div id="links">
+						<a
+							href="https://github.com/Decaded/SnakeGame"
+							target="_blank"
+							>GitHub</a
+						>
+						&nbsp;|&nbsp;
+						<a
+							href="https://decaded.dev"
+							target="_blank"
+							>Decaded.dev</a
+						>
+					</div>
 				</div>
 			</div>
 		</div>

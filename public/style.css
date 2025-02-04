@@ -243,6 +243,52 @@ body.tablet-device #infoSection {
 	flex: 1;
 }
 
+/* New Legend and Links styling */
+#legendAndLinks {
+	margin-top: 20px;
+	padding: 10px;
+	background: rgba(0, 0, 0, 0.8);
+	border-radius: 10px;
+	box-shadow: 0 0 10px rgba(0, 255, 0, 0.5);
+	text-align: left;
+	max-width: 400px;
+}
+
+#legendAndLinks h3 {
+	color: #00ff00;
+	margin-bottom: 20px;
+	font-size: 1em;
+	text-align: center;
+}
+
+#legendAndLinks ul {
+	padding: 0;
+	margin: 0;
+	list-style-type: none;
+}
+
+#legendAndLinks ul li {
+	font-size: 0.8em;
+	margin-bottom: 5px;
+	color: #fff;
+	text-align: justify;
+}
+
+#legendAndLinks #links {
+	font-size: 0.8em;
+	text-align: center;
+	margin-top: 10px;
+}
+
+#legendAndLinks #links a {
+	color: #00ff00;
+	text-decoration: none;
+}
+
+#legendAndLinks #links a:hover {
+	text-decoration: underline;
+}
+
 /* MOBILE VIEW (max-width: 600px) */
 @media (max-width: 600px) {
 	#gameUI {
@@ -269,19 +315,36 @@ body.tablet-device #infoSection {
 	}
 }
 
+/* MOBILE VIEW (max-width: 600px) */
+@media (max-width: 600px) {
+	#gameUI {
+		flex-direction: column;
+	}
+	#gameSection {
+		flex: 1;
+		justify-content: flex-end;
+	}
+	#infoSection {
+		flex: 1;
+		display: flex;
+		flex-direction: column;
+		justify-content: flex-start;
+	}
+	/* Hide legend and links on mobile */
+	#legendAndLinks {
+		display: none;
+	}
+}
+
 /* DESKTOP VIEW (min-width: 601px) */
 @media (min-width: 601px) {
 	#gameUI {
 		flex-direction: row;
 	}
-
-	/* Left column: gameSection takes most space */
 	#gameSection {
 		flex: 2;
 		margin-right: 20px;
 	}
-
-	/* Right column: infoSection only shows leaderboard; hide controls and toggle button */
 	#infoSection {
 		flex: 1;
 		display: flex;
@@ -289,13 +352,17 @@ body.tablet-device #infoSection {
 		justify-content: flex-start;
 		align-items: center;
 	}
+	/* Hide mobile-specific elements */
 	#controls,
 	#toggleLeaderboardButton {
 		display: none;
 	}
-
-	/* Leaderboard always visible on desktop */
+	/* Always show leaderboard on desktop */
 	#leaderboard {
 		display: block !important;
+	}
+	/* Show the legend and links */
+	#legendAndLinks {
+		display: block;
 	}
 }
