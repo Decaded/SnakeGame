@@ -4,7 +4,6 @@ class GameState {
 		this.ctx = this.canvas.getContext('2d');
 		this.gridSize = 20;
 		this.tileCount = Math.floor(this.canvas.width / this.gridSize);
-
 		this.snake = [{ x: 10, y: 10 }];
 		this.direction = { x: 0, y: 0 };
 		this.lastProcessedDirection = { x: 0, y: 0 };
@@ -16,9 +15,15 @@ class GameState {
 		this.currentSpeed = 150;
 		this.speedIncreaseCounter = 0;
 		this.gameLoopTimeout = null;
+		this.foodType = 'apple';
+		this.comboActive = false;
+		this.comboCounter = 0;
 	}
 
 	randomFoodPosition() {
+		const types = ['apple', 'cherry'];
+		this.foodType = Math.random() < 0.2 ? 'cherry' : 'apple'; // 20% chance for cherry
+
 		return {
 			x: Math.floor(Math.random() * this.tileCount),
 			y: Math.floor(Math.random() * this.tileCount),
@@ -81,12 +86,31 @@ class GameCore {
 		this.state.snake.unshift(head);
 
 		if (head.x === this.state.food.x && head.y === this.state.food.y) {
-			this.state.score++;
+			// Handle power-up effects
+			if (this.state.foodType === 'cherry') {
+					this.state.comboActive = true;
+					this.state.comboCounter = 3; // 3 foods with double points
+					showToast('DOUBLE POINTS ACTIVATED!', true);
+			}
+	
+			// Calculate score with combo
+			const points = this.state.comboActive ? 2 : 1;
+			this.state.score += points;
+			
+			// Update combo counter
+			if (this.state.comboActive) {
+					this.state.comboCounter--;
+					if (this.state.comboCounter <= 0) {
+							this.state.comboActive = false;
+							showToast('COMBO ENDED', false);
+					}
+			}
+	
 			this.state.speedIncreaseCounter++;
 			this.state.food = this.state.randomFoodPosition();
-		} else {
+	} else {
 			this.state.snake.pop();
-		}
+	}
 	}
 
 	draw() {
@@ -102,6 +126,25 @@ class GameCore {
 		// Food
 		this.state.ctx.fillStyle = '#f00';
 		this.state.ctx.fillRect(this.state.food.x * this.state.gridSize, this.state.food.y * this.state.gridSize, this.state.gridSize, this.state.gridSize);
+
+		// Food with different colors
+		this.state.ctx.fillStyle = this.state.foodType === 'cherry' ? '#ff69b4' : '#ff0000';
+		this.state.ctx.beginPath();
+		this.state.ctx.arc(
+			this.state.food.x * this.state.gridSize + this.state.gridSize / 2,
+			this.state.food.y * this.state.gridSize + this.state.gridSize / 2,
+			this.state.gridSize / 2 - 1,
+			0,
+			Math.PI * 2,
+		);
+		this.state.ctx.fill();
+
+		// Combo counter
+		const comboEl = document.getElementById('comboCounter');
+		if (comboEl) {
+			comboEl.style.display = this.state.comboActive ? 'block' : 'none';
+			comboEl.textContent = `COMBO x2 (${this.state.comboCounter} left)`;
+		}
 
 		// Score
 		this.state.ctx.fillStyle = '#fff';
@@ -252,7 +295,7 @@ class SpeedController {
 	updateLevelBar(state) {
 		const minSpeed = 70;
 		const maxSpeed = 150;
-		const maxLevel = 8; 
+		const maxLevel = 8;
 
 		// Calculate current level and progress
 		const rawLevel = (maxSpeed - state.currentSpeed) / 10 + 1;

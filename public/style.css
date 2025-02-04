@@ -233,6 +233,26 @@ canvas {
 	border: 2px solid #ff0000;
 }
 
+.power-up-indicator {
+	position: fixed;
+	top: 10px;
+	left: 10px;
+	font-size: 0.8em;
+	color: #ff69b4;
+	text-shadow: 0 0 5px rgba(255,105,180,0.8);
+}
+
+#comboCounter {
+	display: none;
+	animation: pulse 1s infinite;
+}
+
+@keyframes pulse {
+	0% { transform: scale(1); }
+	50% { transform: scale(1.1); }
+	100% { transform: scale(1); }
+}
+
 /* Default media query layout */
 @media (min-width: 601px) {
 	#controls,
