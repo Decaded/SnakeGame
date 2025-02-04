@@ -61,6 +61,10 @@ function isMobileDevice() {
 
 if (isMobileDevice()) {
 	document.body.classList.add('mobile-device');
+	// Arbitrary threshold to decide if it's a tablet vs a phone
+	if (window.innerWidth > 800) {
+		document.body.classList.add('tablet-device');
+	}
 } else {
 	document.body.classList.add('desktop-device');
 }
