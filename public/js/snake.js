@@ -132,8 +132,10 @@ class GameCore {
 		this.state.canvas.style.borderColor = '#00ff00';
 		this.state.canvas.style.boxShadow = '0 0 20px rgba(0, 255, 0, 0.8)';
 		const levelBar = document.getElementById('levelBar');
+		const levelText = document.getElementById('levelText');
 		if (levelBar) {
 			levelBar.style.width = '0%';
+			levelText.textContent = 'Level 1';
 		}
 
 		// Start the new game loop.
