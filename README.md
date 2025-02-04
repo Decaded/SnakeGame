@@ -37,7 +37,7 @@ A classic Snake Game built with HTML, CSS, and JavaScript. The game features a l
 
 1. **Clone the repository**:
    ```bash
-   git clone https://github.com/your-username/snake-game.git
+   git clone https://github.com/Decaded/snake-game.git
    cd snake-game
    ```
 
