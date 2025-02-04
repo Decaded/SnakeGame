@@ -165,6 +165,10 @@ class GameCore {
 		this.state.currentSpeed = 150;
 		this.state.speedIncreaseCounter = 0;
 
+		// Reset combo bonuses
+		this.state.comboActive = false;
+		this.state.comboCounter = 0;
+
 		// Reset canvas border and level bar
 		this.state.canvas.style.borderColor = '#00ff00';
 		this.state.canvas.style.boxShadow = '0 0 20px rgba(0, 255, 0, 0.8)';
