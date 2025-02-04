@@ -128,6 +128,14 @@ class GameCore {
 		this.state.currentSpeed = 150;
 		this.state.speedIncreaseCounter = 0;
 
+		// Reset canvas border and level bar
+		this.state.canvas.style.borderColor = '#00ff00';
+		this.state.canvas.style.boxShadow = '0 0 20px rgba(0, 255, 0, 0.8)';
+		const levelBar = document.getElementById('levelBar');
+		if (levelBar) {
+			levelBar.style.width = '0%';
+		}
+
 		// Start the new game loop.
 		this.startGameLoop();
 	}
