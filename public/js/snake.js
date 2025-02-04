@@ -248,13 +248,26 @@ class SpeedController {
 	}
 
 	updateLevelBar(state) {
-		// Calculate fill ratio: at 150ms (start) the bar is 0%; at 70ms it's 100%
 		const minSpeed = 70;
 		const maxSpeed = 150;
-		const ratio = (maxSpeed - state.currentSpeed) / (maxSpeed - minSpeed);
+		const maxLevel = 8; 
+
+		// Calculate current level and progress
+		const rawLevel = (maxSpeed - state.currentSpeed) / 10 + 1;
+		const level = Math.min(rawLevel, maxLevel);
+		const progress = (maxSpeed - state.currentSpeed) / (maxSpeed - minSpeed);
+
 		const levelBar = document.getElementById('levelBar');
-		if (levelBar) {
-			levelBar.style.width = `${ratio * 100}%`;
+		const levelText = document.getElementById('levelText');
+
+		if (levelBar && levelText) {
+			levelBar.style.width = `${Math.min(progress * 100, 100)}%`;
+
+			if (state.currentSpeed === minSpeed) {
+				levelText.textContent = 'MAX LEVEL!';
+			} else {
+				levelText.textContent = `Level ${Math.floor(level)}`;
+			}
 		}
 	}
 }

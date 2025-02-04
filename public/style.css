@@ -47,14 +47,32 @@ canvas {
 	border: 2px solid #00ff00;
 	margin-bottom: 10px;
 	position: relative;
+	display: flex;
+	align-items: center;
+	justify-content: center;
 }
 
-/* Level bar inside indicator */
 #levelBar {
+	position: absolute;
 	height: 100%;
 	width: 0%;
+	left: 0;
 	background: #00ff00;
 	transition: width 0.5s ease;
+}
+
+#levelText {
+	position: absolute;
+	font-size: 0.6em;
+	color: #fffbfb;
+	font-family: 'Press Start 2P', cursive;
+	z-index: 1;
+	text-wrap: nowrap;
+	/* Center both horizontally and vertically */
+	left: 50%;
+	top: 50%;
+	transform: translate(-50%, -50%);
+	pointer-events: none; /* Prevents text from blocking bar interactions */
 }
 
 /* Info section: holds controls and leaderboard (mobile) or just leaderboard (desktop) */
