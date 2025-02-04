@@ -18,6 +18,7 @@ class GameState {
 		this.foodType = 'apple';
 		this.comboActive = false;
 		this.comboCounter = 0;
+		this.currentLevel = 1;
 	}
 
 	randomFoodPosition() {
@@ -83,12 +84,15 @@ class GameCore {
 			// Handle power-up effects
 			if (this.state.foodType === 'cherry') {
 				this.state.comboActive = true;
-				this.state.comboCounter = 3; // 3 foods with double points
+				this.state.comboCounter = 3;
 				showToast('DOUBLE POINTS ACTIVATED!', true);
 			}
 
-			// Calculate score with combo
-			const points = this.state.comboActive ? 2 : 1;
+			// Calculate score with level and combo
+			const basePoints = 1;
+			const levelMultiplier = this.state.currentLevel;
+			const comboMultiplier = this.state.comboActive ? 2 : 1;
+			const points = basePoints * levelMultiplier * comboMultiplier;
 			this.state.score += points;
 
 			// Update combo counter
@@ -166,6 +170,7 @@ class GameCore {
 		this.state.speedIncreaseCounter = 0;
 
 		// Reset combo bonuses
+		this.state.currentLevel = 1;
 		this.state.comboActive = false;
 		this.state.comboCounter = 0;
 
@@ -307,6 +312,7 @@ class SpeedController {
 		// Calculate current level and progress
 		const rawLevel = (maxSpeed - state.currentSpeed) / 10 + 1;
 		const level = Math.min(rawLevel, maxLevel);
+		state.currentLevel = Math.floor(level);
 		const progress = (maxSpeed - state.currentSpeed) / (maxSpeed - minSpeed);
 
 		const levelBar = document.getElementById('levelBar');
