@@ -37,9 +37,9 @@ const Config = {
 				points: 0,
 				color: '#FFD700',
 				effect: {
-					type: 'doubleScore',
+					type: 'glow',
 					duration: 2000,
-					message: 'SCORE DOUBLED!',
+					message: '', // Handled in consumption logic
 				},
 				graphics: {
 					shadowColor: '#FFD700',
@@ -95,7 +95,15 @@ class GameState {
 
 class FoodSystem {
 	static generate(tileCount, snake) {
-		const type = this.randomType();
+		const isFirstFood = snake.length === 1;
+		let type;
+		if (isFirstFood) {
+			do {
+				type = this.randomType();
+			} while (type === 'goldenApple');
+		} else {
+			type = this.randomType();
+		}
 		return {
 			type: type,
 			position: this.randomPosition(tileCount, snake),
@@ -197,13 +205,11 @@ class GameEngine {
 	handleFoodConsumption() {
 		if (this.state.food.type === 'cherry') {
 			this.applyEffect(this.state.food.effect);
-
 			this.state.score += this.state.food.points * this.state.level;
 		} else if (this.state.food.type === 'apple') {
 			let multiplier = 1;
 			if (this.state.effects.combo.active) {
 				multiplier = 2;
-				// Decrement combo counter when apple is consumed.
 				this.state.effects.combo.remaining--;
 				if (this.state.effects.combo.remaining <= 0) {
 					this.state.effects.combo.active = false;
@@ -212,7 +218,20 @@ class GameEngine {
 			}
 			this.state.score += this.state.food.points * this.state.level * multiplier;
 		} else if (this.state.food.type === 'goldenApple') {
-			this.applyEffect(this.state.food.effect);
+			if (this.state.effects.combo.active) {
+				this.state.score *= 3;
+				this.state.effects.combo.active = false;
+				this.state.effects.combo.remaining = 0;
+				showToast('TRIPLE POINTS!');
+			} else {
+				this.state.score *= 2;
+				showToast('SCORE DOUBLED!');
+			}
+			this.applyEffect({
+				...this.state.food.effect,
+				type: 'glow',
+				message: '', // Message already shown above
+			});
 		}
 		this.state.speedCounter++;
 	}
@@ -220,14 +239,17 @@ class GameEngine {
 	applyEffect(effect) {
 		switch (effect.type) {
 			case 'combo':
-				this.state.effects.combo = {
-					active: true,
-					remaining: effect.duration,
-				};
+				if (this.state.effects.combo.active) {
+					this.state.effects.combo.remaining += effect.duration;
+				} else {
+					this.state.effects.combo = {
+						active: true,
+						remaining: effect.duration,
+					};
+				}
 				showToast(effect.message);
 				break;
-			case 'doubleScore':
-				this.state.score *= 2;
+			case 'glow':
 				this.state.effects.glow = {
 					active: true,
 					endTime: Date.now() + effect.duration,
