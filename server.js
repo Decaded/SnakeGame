@@ -8,92 +8,148 @@ const { body, validationResult } = require('express-validator');
 const xss = require('xss-clean');
 const sanitizeHtml = require('sanitize-html');
 const NyaDB = require('@decaded/nyadb');
+const morgan = require('morgan');
 
+// Initialize Express
 const app = express();
-const port = process.env.PORT;
 
-// Initialize NyaDB
-const nyadb = new NyaDB();
-nyadb.create('scores');
+// Configuration
+const config = {
+	port: process.env.PORT,
+	cors: {
+		origin: process.env.CORS_ORIGIN || 'https://decaded.dev',
+		methods: ['GET', 'POST', 'OPTIONS'],
+		allowedHeaders: ['Content-Type'],
+		credentials: true,
+	},
+	rateLimit: {
+		windowMs: 15 * 60 * 1000, // 15 minutes
+		max: 100, // Limit each IP to 100 requests per windowMs
+		standardHeaders: true,
+		legacyHeaders: false,
+	},
+};
+
+// Database Setup
+const initializeDatabase = () => {
+	const nyadb = new NyaDB();
+	nyadb.create('scores');
+	return nyadb;
+};
+
+const db = initializeDatabase();
 
 // Security Middleware
 app.use(helmet());
 app.use(xss());
-
-// CORS Config
-app.use(
-	cors({
-		origin: 'https://decaded.dev',
-		methods: ['GET', 'POST'],
-		allowedHeaders: ['Content-Type'],
-		credentials: true,
-	}),
-);
-
-// Rate Limiting (10 requests per minute per IP)
-const apiLimiter = rateLimit({
-	windowMs: 60 * 1000,
-	max: 10,
-	message: { success: false, message: 'Too many requests. Please try again later.' },
-});
-
-app.use(apiLimiter);
+app.use(cors(config.cors));
 app.use(bodyParser.json());
-app.use(express.static('public'));
+app.use(bodyParser.urlencoded({ extended: false }));
 
-// Save Score Endpoint
+// Logging
+app.use(morgan(process.env.NODE_ENV === 'production' ? 'combined' : 'dev'));
+
+// Rate Limiting
+const apiLimiter = rateLimit(config.rateLimit);
+app.use('/', apiLimiter);
+
+// Validation Middleware
+const validateRequest = validations => [
+	validations,
+	(req, res, next) => {
+		const errors = validationResult(req);
+		if (!errors.isEmpty()) {
+			return res.status(422).json({ errors: errors.array() });
+		}
+		next();
+	},
+];
+
+// API Routes
 app.post(
 	'/saveScore',
-	[
+	validateRequest([
 		body('nick')
 			.trim()
 			.isLength({ min: 3, max: 16 })
-			.matches(/^[a-zA-Z0-9_]+$/)
-			.withMessage('Nick must be 3-16 characters and contain only letters, numbers, and underscores.'),
-		body('score').isInt({ min: 0, max: 9999999 }).withMessage('Score must be an integer between 0 and 9999999.'),
-	],
+			.matches(/^[\w-]+$/)
+			.withMessage('Nickname must be 3-16 alphanumeric characters'),
+		body('score').isInt({ min: 0, max: 9_999_999 }).withMessage('Invalid score value'),
+	]),
 	async (req, res) => {
-		const errors = validationResult(req);
-		if (!errors.isEmpty()) {
-			return res.status(400).json({ success: false, message: errors.array()[0].msg });
-		}
+		try {
+			const { nick, score } = req.body;
+			const sanitizedNick = sanitizeHtml(nick);
 
-		const nick = req.body.nick;
-		const score = req.body.score;
+			const scores = db.get('scores') || {};
+			const currentScore = scores[sanitizedNick] || 0;
 
-		const scores = nyadb.get('scores') || {};
-
-		if (scores[nick]) {
-			if (score > scores[nick]) {
-				scores[nick] = score;
-				res.json({ success: true, message: 'Score updated successfully' });
-			} else {
-				res.json({ success: false, message: 'You did not beat your previous score' });
+			if (score > currentScore) {
+				scores[sanitizedNick] = score;
+				db.set('scores', scores);
+				return res.json({
+					success: true,
+					message: 'Score saved successfully',
+					newHighScore: score > currentScore,
+				});
 			}
-		} else {
-			scores[nick] = score;
-			res.json({ success: true, message: 'Score saved successfully' });
-		}
 
-		nyadb.set('scores', scores);
+			res.json({
+				success: true,
+				message: 'Existing score remains valid',
+				currentScore,
+			});
+		} catch (error) {
+			console.error('Database error:', error);
+			res.status(500).json({
+				success: false,
+				message: 'Internal server error',
+			});
+		}
 	},
 );
 
-// Get Top 10 Players Endpoint
 app.get('/getTopPlayers', (req, res) => {
-	const scores = nyadb.get('scores') || {};
+	try {
+		const scores = db.get('scores') || {};
+		const topPlayers = Object.entries(scores)
+			.sort(([, a], [, b]) => b - a)
+			.slice(0, 10)
+			.map(([nick, score]) => ({
+				nick: sanitizeHtml(nick),
+				score,
+			}));
 
-	const scoresArray = Object.keys(scores).map(nick => ({
-		nick: sanitizeHtml(nick),
-		score: scores[nick],
-	}));
-
-	const topPlayers = scoresArray.sort((a, b) => b.score - a.score).slice(0, 10);
-
-	res.json(topPlayers);
+		res.json(topPlayers);
+	} catch (error) {
+		console.error('Database error:', error);
+		res.status(500).json({
+			success: false,
+			message: 'Failed to retrieve leaderboard',
+		});
+	}
 });
+
+// Error Handling
+app.use((err, req, res, next) => {
+	console.error(err.stack);
+	res.status(500).json({
+		success: false,
+		message: 'An unexpected error occurred',
+	});
+});
+
+// Server Initialization
+const startServer = () => {
+	app.listen(config.port, () => {
+		console.log(`Server running in ${process.env.NODE_ENV || 'development'} mode`);
+		console.log(`Listening on port ${config.port}`);
+	});
+};
 
 // Start the server
-app.listen(port, () => {
-	console.log(`Server running at http://localhost:${port}`);
-});
+if (require.main === module) {
+	startServer();
+}
+
+module.exports = app;

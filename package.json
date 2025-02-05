@@ -10,6 +10,7 @@
     "express-rate-limit": "^7.5.0",
     "express-validator": "^7.2.1",
     "helmet": "^8.0.0",
+    "morgan": "^1.10.0",
     "sanitize-html": "^2.14.0",
     "xss-clean": "^0.1.4"
   },
@@ -19,7 +20,6 @@
   },
   "author": "Decaded (https://decaded.dev)",
   "license": "MIT",
-  "devDependencies": {},
   "repository": {
     "type": "git",
     "url": "git+https://github.com/Decaded/SnakeGame.git"
