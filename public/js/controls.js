@@ -1,84 +1,126 @@
-// Global helper to dispatch a keyboard event, used by the arrow buttons.
-function setDirection(dir) {
-	const key = dir === 'up' ? 'ArrowUp' : dir === 'down' ? 'ArrowDown' : dir === 'left' ? 'ArrowLeft' : 'ArrowRight';
+// Constants and Configuration
+const DIRECTION_MAP = {
+	up: 'ArrowUp',
+	down: 'ArrowDown',
+	left: 'ArrowLeft',
+	right: 'ArrowRight',
+	w: 'up',
+	s: 'down',
+	a: 'left',
+	d: 'right',
+};
+
+const ELEMENTS = {
+	messageContainer: '#messageContainer',
+	legend: '#legendAndLinks',
+	leaderboard: '#leaderboard',
+	buttons: {
+		up: '#upBtn',
+		down: '#downBtn',
+		left: '#leftBtn',
+		right: '#rightBtn',
+		toggleLegend: '#toggleLegendButton',
+		toggleLeaderboard: '#toggleLeaderboardButton',
+	},
+};
+
+// Helper Functions
+const setDirection = dir => {
+	const key = DIRECTION_MAP[dir];
+	if (!key) return;
 
 	const event = new KeyboardEvent('keydown', { key });
 	document.dispatchEvent(event);
-}
+};
 
-// Global function to show toast notifications.
-function showToast(message, isSuccess = true) {
-	const container = document.getElementById('messageContainer');
+const showToast = (message, isSuccess = true) => {
+	const container = document.querySelector(ELEMENTS.messageContainer);
 	const messageEl = document.createElement('div');
+
 	messageEl.className = `game-message ${isSuccess ? 'success' : 'error'}`;
 	messageEl.textContent = message;
 
 	container.appendChild(messageEl);
 	setTimeout(() => messageEl.remove(), 3000);
-}
+};
 
-// Mobile control event listeners (supporting touch)
-document.getElementById('upBtn').addEventListener('touchstart', e => {
-	e.preventDefault(); // Prevents ghost clicks
-	setDirection('up');
-});
-document.getElementById('downBtn').addEventListener('touchstart', e => {
-	e.preventDefault();
-	setDirection('down');
-});
-document.getElementById('leftBtn').addEventListener('touchstart', e => {
-	e.preventDefault();
-	setDirection('left');
-});
-document.getElementById('rightBtn').addEventListener('touchstart', e => {
-	e.preventDefault();
-	setDirection('right');
-});
+const createToggleHandler = (buttonId, targetId, labels) => {
+	const button = document.querySelector(buttonId);
+	const target = document.querySelector(targetId);
 
-const toggleLegendButton = document.getElementById('toggleLegendButton');
-const legend = document.getElementById('legendAndLinks');
+	if (!button || !target) return;
 
-if (toggleLegendButton && legend) {
-  toggleLegendButton.addEventListener('click', function() {
-    const isHidden = legend.style.display === 'none';
-    legend.style.display = isHidden ? 'block' : 'none';
-    this.textContent = isHidden ? 'Hide How to Play' : 'Show How to Play';
-  });
-  
-  // Hide legend initially on mobile
-  if (window.innerWidth <= 600) {
-    legend.style.display = 'none';
-  }
-}
+	button.addEventListener('click', () => {
+		const isHidden = target.style.display === 'none';
+		target.style.display = isHidden ? 'block' : 'none';
+		button.textContent = labels[isHidden ? 0 : 1];
+	});
 
-// Click events to support desktop interactions:
-document.getElementById('upBtn').addEventListener('click', () => setDirection('up'));
-document.getElementById('downBtn').addEventListener('click', () => setDirection('down'));
-document.getElementById('leftBtn').addEventListener('click', () => setDirection('left'));
-document.getElementById('rightBtn').addEventListener('click', () => setDirection('right'));
+	return { button, target };
+};
 
-// Leaderboard Toggle Button functionality
-document.getElementById('toggleLeaderboardButton').addEventListener('click', function () {
-	const leaderboardEl = document.getElementById('leaderboard');
-	if (leaderboardEl.style.display === 'none' || leaderboardEl.style.display === '') {
-		leaderboardEl.style.display = 'block';
-		this.textContent = 'Hide Leaderboard';
-	} else {
-		leaderboardEl.style.display = 'none';
-		this.textContent = 'Show Leaderboard';
+// Event Handlers
+const setupDirectionControls = () => {
+	const handleDirectionEvent = (direction, event) => {
+		if (event.type === 'touchstart') event.preventDefault();
+		setDirection(direction);
+	};
+
+	Object.entries(DIRECTION_MAP).forEach(([input, direction]) => {
+		if (!['w', 's', 'a', 'd', 'up', 'down', 'left', 'right'].includes(input)) return;
+
+		const button = document.querySelector(ELEMENTS.buttons[direction.toLowerCase()]);
+		if (!button) return;
+
+		['touchstart', 'click'].forEach(eventType => {
+			button.addEventListener(eventType, e => {
+				handleDirectionEvent(input, e);
+			});
+		});
+	});
+};
+
+const setupKeyboardControls = () => {
+	document.addEventListener('keydown', e => {
+		const key = e.key.toLowerCase();
+		if (DIRECTION_MAP[key]) {
+			e.preventDefault();
+			setDirection(key);
+		}
+	});
+};
+
+const initializeToggles = () => {
+	// Legend toggle
+	const legendToggle = createToggleHandler(ELEMENTS.buttons.toggleLegend, ELEMENTS.legend, ['Hide How to Play', 'Show How to Play']);
+
+	// Leaderboard toggle
+	createToggleHandler(ELEMENTS.buttons.toggleLeaderboard, ELEMENTS.leaderboard, ['Hide Leaderboard', 'Show Leaderboard']);
+
+	// Initial mobile legend state
+	if (legendToggle?.target && window.innerWidth <= 600) {
+		legendToggle.target.style.display = 'none';
 	}
-});
+};
 
-function isMobileDevice() {
-	return /Mobi|Android/i.test(navigator.userAgent);
-}
+// Device Detection and Initialization
+const detectDeviceType = () => {
+	const isMobile = /Mobi|Android/i.test(navigator.userAgent);
+	const deviceClass = isMobile ? 'mobile-device' : 'desktop-device';
 
-if (isMobileDevice()) {
-	document.body.classList.add('mobile-device');
-	// Arbitrary threshold to decide if it's a tablet vs a phone
-	if (window.innerWidth > 800) {
+	document.body.classList.add(deviceClass);
+	if (isMobile && window.innerWidth > 800) {
 		document.body.classList.add('tablet-device');
 	}
-} else {
-	document.body.classList.add('desktop-device');
-}
+};
+
+// Initial Setup
+const initialize = () => {
+	detectDeviceType();
+	setupDirectionControls();
+	setupKeyboardControls();
+	initializeToggles();
+};
+
+// Start the application
+initialize();
