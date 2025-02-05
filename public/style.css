@@ -406,6 +406,65 @@ body.tablet-device #infoSection {
 	animation: pulse 1s infinite;
 }
 
+#toggleLegendButton {
+	padding: 10px 20px;
+	font-family: 'Press Start 2P', cursive;
+	font-size: 0.8em;
+	background: #00ff00;
+	border: none;
+	border-radius: 5px;
+	color: #000;
+	cursor: pointer;
+	box-shadow: 0 0 10px rgba(0, 255, 0, 0.8);
+	margin-top: 10px;
+}
+
+#toggleLegendButton:hover {
+	background: #00cc00;
+}
+
+.mobile-only {
+	display: none;
+}
+
+#legendAndLinks {
+	display: block;
+}
+
+.food-legend {
+	list-style: none;
+	padding: 0;
+	margin: 0;
+}
+
+.food-icon {
+	display: inline-block;
+	width: 20px;
+	height: 20px;
+	border-radius: 50%;
+	margin-right: 10px;
+	vertical-align: middle;
+}
+
+.food-icon.apple {
+	background-color: #ff0000;
+	box-shadow: 0 0 5px #ff0000;
+}
+
+.food-icon.cherry {
+	background-color: #ff69b4;
+	box-shadow: 0 0 5px #ff69b4;
+}
+
+.food-icon.golden-apple {
+	background-color: #ffd700;
+	box-shadow: 0 0 5px #ffd700;
+}
+
+.food-description {
+	vertical-align: middle;
+}
+
 /* MOBILE VIEW (max-width: 600px) */
 @media (max-width: 600px) {
 	#gameUI {
@@ -430,6 +489,16 @@ body.tablet-device #infoSection {
 	#toggleLeaderboardButton {
 		display: block;
 	}
+
+	#toggleLegendButton {
+		display: block;
+	}
+
+	#legendAndLinks {
+		display: none;
+		width: 100%;
+		margin-top: 10px;
+	}
 }
 
 /* MOBILE VIEW (max-width: 600px) */
@@ -448,8 +517,27 @@ body.tablet-device #infoSection {
 		justify-content: flex-start;
 	}
 	/* Hide legend and links on mobile */
+	#toggleLegendButton {
+		display: none;
+	}
+
+	#legendAndLinks {
+		display: block !important;
+	}
+
+	.mobile-only {
+		display: block;
+	}
+
 	#legendAndLinks {
 		display: none;
+		width: 100%;
+		margin-top: 10px;
+	}
+
+	.food-icon {
+		width: 25px;
+		height: 25px;
 	}
 }
 

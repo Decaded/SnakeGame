@@ -35,7 +35,23 @@ document.getElementById('rightBtn').addEventListener('touchstart', e => {
 	setDirection('right');
 });
 
-// (Optional) Also add click events to support desktop interactions:
+const toggleLegendButton = document.getElementById('toggleLegendButton');
+const legend = document.getElementById('legendAndLinks');
+
+if (toggleLegendButton && legend) {
+  toggleLegendButton.addEventListener('click', function() {
+    const isHidden = legend.style.display === 'none';
+    legend.style.display = isHidden ? 'block' : 'none';
+    this.textContent = isHidden ? 'Hide How to Play' : 'Show How to Play';
+  });
+  
+  // Hide legend initially on mobile
+  if (window.innerWidth <= 600) {
+    legend.style.display = 'none';
+  }
+}
+
+// Click events to support desktop interactions:
 document.getElementById('upBtn').addEventListener('click', () => setDirection('up'));
 document.getElementById('downBtn').addEventListener('click', () => setDirection('down'));
 document.getElementById('leftBtn').addEventListener('click', () => setDirection('left'));
