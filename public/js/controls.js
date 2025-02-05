@@ -80,6 +80,8 @@ const setupDirectionControls = () => {
 	});
 };
 
+const pressedKeys = new Set();
+
 const setupKeyboardControls = () => {
 	document.addEventListener('keydown', e => {
 		// Prevent handling keys when typing in inputs
@@ -88,10 +90,16 @@ const setupKeyboardControls = () => {
 		}
 
 		const key = e.key.toLowerCase();
-		if (DIRECTION_MAP[key]) {
+		if (DIRECTION_MAP[key] && !pressedKeys.has(key)) {
 			e.preventDefault();
+			pressedKeys.add(key);
 			setDirection(key);
 		}
+	});
+
+	document.addEventListener('keyup', e => {
+		const key = e.key.toLowerCase();
+		pressedKeys.delete(key); // Allow the key to be pressed again after release
 	});
 };
 

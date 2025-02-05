@@ -164,7 +164,12 @@ class GameEngine {
 	update() {
 		this.modules.forEach(module => module.preUpdate?.(this.state));
 
-		// Snake movement
+		// Process movement queue before moving
+		if (this.state.directionQueue.length > 0 && !(this.state.directionQueue[0].x === -this.state.direction.x && this.state.directionQueue[0].y === -this.state.direction.y)) {
+			this.state.direction = this.state.directionQueue.shift();
+		}
+
+		// Apply movement
 		const head = {
 			x: this.state.snake[0].x + this.state.direction.x,
 			y: this.state.snake[0].y + this.state.direction.y,
@@ -322,7 +327,9 @@ class GameEngine {
 class InputController {
 	init(state) {
 		this.state = state;
+		this.pressedKeys = new Set(); // Track pressed keys
 		document.addEventListener('keydown', this.handleInput.bind(this));
+		document.addEventListener('keyup', this.handleKeyRelease.bind(this));
 	}
 
 	handleInput(e) {
@@ -338,10 +345,20 @@ class InputController {
 			ArrowRight: { x: 1, y: 0 },
 		};
 
+		// Ignore if key is already pressed
+		if (this.pressedKeys.has(e.key)) {
+			return;
+		}
+
 		const newDir = directions[e.key];
 		if (newDir && !this.isOpposite(newDir)) {
 			this.state.directionQueue.push(newDir);
+			this.pressedKeys.add(e.key); // Mark key as processed
 		}
+	}
+
+	handleKeyRelease(e) {
+		this.pressedKeys.delete(e.key); // Allow re-pressing the key
 	}
 
 	isOpposite(newDir) {
