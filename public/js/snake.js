@@ -414,100 +414,47 @@ class SpeedManager {
 // ======================
 class LeaderboardManager {
 	constructor() {
-		this.config = {
-			API_BASE: 'https://api.decaded.dev/SnakeGame',
-			REFRESH_INTERVAL: 30000,
-			MAX_RETRIES: 3,
-		};
+		this.API_BASE = 'https://api.decaded.dev/SnakeGame';
 		this.topPlayersList = document.getElementById('topPlayers');
 		this.fetchInterval = null;
-		this.isAvailable = true;
-		this.cachedData = [];
 	}
 
-	init(state) {
-		this.state = state;
-		this.checkAvailability().then(() => {
-			this.setupAutoRefresh();
-		});
-	}
-
-	async checkAvailability() {
-		try {
-			const response = await fetch(this.config.API_BASE, { method: 'HEAD' });
-			this.isAvailable = response.ok;
-		} catch (error) {
-			this.isAvailable = false;
-			console.warn('Leaderboard unavailable, using offline mode');
-		}
+	init() {
+		this.setupAutoRefresh();
 	}
 
 	setupAutoRefresh() {
-		if (!this.isAvailable) return;
-		this.fetchTopPlayers().finally(() => {
-			this.fetchInterval = setInterval(() => this.fetchTopPlayers(), this.config.REFRESH_INTERVAL);
-		});
+		this.fetchTopPlayers();
+		this.fetchInterval = setInterval(() => this.fetchTopPlayers(), 30000);
 	}
 
-	async fetchTopPlayers(retryCount = 0) {
-		if (!this.isAvailable) return;
-
+	async fetchTopPlayers() {
 		try {
-			const response = await fetch(`${this.config.API_BASE}/getTopPlayers`, {
+			const response = await fetch(`${this.API_BASE}/getTopPlayers`, {
 				credentials: 'include',
 			});
-
-			if (!response.ok) throw new Error('Bad response');
-
 			const data = await response.json();
-			this.cachedData = data;
 			this.updateDisplay(data);
 		} catch (error) {
 			console.error('Leaderboard fetch failed:', error);
-			if (retryCount < this.config.MAX_RETRIES) {
-				setTimeout(() => this.fetchTopPlayers(retryCount + 1), 2000);
-			} else {
-				this.showCachedData();
-				showToast('Leaderboard unavailable - showing cached results', false);
-			}
 		}
 	}
 
-	showCachedData() {
-		if (this.cachedData.length > 0) {
-			this.updateDisplay(this.cachedData);
-			showToast('Showing cached leaderboard data', false);
-		}
+	updateDisplay(players) {
+		this.topPlayersList.innerHTML = players.map(player => `<li>${player.nick}: ${player.score}</li>`).join('');
 	}
 
 	async saveScore(nickname, score) {
-		if (!this.isAvailable) {
-			return {
-				success: false,
-				message: 'Leaderboard unavailable - score not saved',
-				localScore: score,
-			};
-		}
-
 		try {
-			const response = await fetch(`${this.config.API_BASE}/saveScore`, {
+			const response = await fetch(`${this.API_BASE}/saveScore`, {
 				method: 'POST',
 				headers: { 'Content-Type': 'application/json' },
-				body: JSON.stringify({ nick: nickname, score: score }),
+				body: JSON.stringify({ nick: nickname, score }),
 				credentials: 'include',
 			});
-
-			if (!response.ok) throw new Error('Save failed');
-
-			await this.fetchTopPlayers();
-			return { success: true, message: 'Score saved!' };
+			return await response.json();
 		} catch (error) {
-			console.error('Score save failed:', error);
-			return {
-				success: false,
-				message: 'Failed to save score - retrying...',
-				localScore: score,
-			};
+			return { success: false, message: 'Failed to save score' };
 		}
 	}
 
@@ -572,18 +519,14 @@ class UIManager {
 		const nickname = this.elements.nicknameInput.value.trim();
 
 		if (!nickname) {
-			showToast('No nickname entered - score not saved', false);
+			showToast('No nickname entered', false);
 			this.toggleModal(false);
 			this.game.reset();
 			return;
 		}
 
-		try {
-			const result = await leaderboard.saveScore(nickname, this.game.state.score);
-			showToast(result.message, result.success);
-		} catch (error) {
-			showToast('Failed to save score', false);
-		}
+		const result = await leaderboard.saveScore(nickname, this.game.state.score);
+		showToast(result.message, result.success);
 
 		this.toggleModal(false);
 		this.game.reset();
@@ -661,10 +604,9 @@ const game = new GameEngine();
 const leaderboard = new LeaderboardManager();
 const ui = new UIManager(game);
 
-game.addModule(leaderboard);
-game.addModule(ui);
+leaderboard.init();
 
-// Start the game loop!
+game.addModule(ui);
 game.start();
 
 window.addEventListener('beforeunload', () => {
