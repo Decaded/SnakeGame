@@ -321,6 +321,11 @@ class InputController {
 	}
 
 	handleInput(e) {
+		// Prevent handling keys when typing in inputs
+		if (['INPUT', 'TEXTAREA'].includes(e.target.tagName)) {
+			return;
+		}
+
 		const directions = {
 			ArrowUp: { x: 0, y: -1 },
 			ArrowDown: { x: 0, y: 1 },

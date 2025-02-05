@@ -82,6 +82,11 @@ const setupDirectionControls = () => {
 
 const setupKeyboardControls = () => {
 	document.addEventListener('keydown', e => {
+		// Prevent handling keys when typing in inputs
+		if (['INPUT', 'TEXTAREA'].includes(e.target.tagName)) {
+			return;
+		}
+
 		const key = e.key.toLowerCase();
 		if (DIRECTION_MAP[key]) {
 			e.preventDefault();
