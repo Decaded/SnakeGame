@@ -83,7 +83,7 @@ class GameState {
 		this.baseSpeed = Config.Game.BASE_SPEED;
 		this.currentSpeed = Config.Game.BASE_SPEED;
 		this.speedCounter = 0;
-		this.food = FoodSystem.generate(this.tileCount);
+		this.food = FoodSystem.generate(this.tileCount, this.snake);
 		this.effects = {
 			combo: { active: false, remaining: 0 },
 			glow: { active: false, endTime: 0 },
@@ -94,11 +94,11 @@ class GameState {
 }
 
 class FoodSystem {
-	static generate(tileCount) {
+	static generate(tileCount, snake) {
 		const type = this.randomType();
 		return {
 			type: type,
-			position: this.randomPosition(tileCount),
+			position: this.randomPosition(tileCount, snake),
 			...Config.Food.PROPERTIES[type],
 		};
 	}
@@ -114,11 +114,16 @@ class FoodSystem {
 		return 'apple';
 	}
 
-	static randomPosition(tileCount) {
-		return {
-			x: Math.floor(Math.random() * tileCount),
-			y: Math.floor(Math.random() * tileCount),
-		};
+	static randomPosition(tileCount, snake) {
+		let position;
+		do {
+			position = {
+				x: Math.floor(Math.random() * tileCount),
+				y: Math.floor(Math.random() * tileCount),
+			};
+		} while (snake.some(segment => segment.x === position.x && segment.y === position.y));
+
+		return position;
 	}
 }
 
@@ -169,7 +174,7 @@ class GameEngine {
 		// Food handling
 		if (this.isFoodCollision(head)) {
 			this.handleFoodConsumption();
-			this.state.food = FoodSystem.generate(this.state.tileCount);
+			this.state.food = FoodSystem.generate(this.state.tileCount, this.state.snake);
 		} else {
 			this.state.snake.pop();
 		}
