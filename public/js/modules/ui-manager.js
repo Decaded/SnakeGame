@@ -1,0 +1,126 @@
+import { showToast } from '../utils/helpers.js';
+import { Config } from '../config.js';
+
+export class UIManager {
+	constructor(game, leaderboard) {
+		this.game = game;
+		this.leaderboard = leaderboard;
+		this.elements = {
+			gameOverModal: document.getElementById('gameOverModal'),
+			nicknameInput: document.getElementById('nicknameInput'),
+			submitButton: document.getElementById('submitScoreButton'),
+			comboCounter: document.getElementById('comboCounter'),
+			levelBar: document.getElementById('levelBar'),
+			levelText: document.getElementById('levelText'),
+		};
+	}
+
+	init(state) {
+		this.state = state;
+		this.setupEventListeners();
+	}
+
+	setupEventListeners() {
+		// Score submission
+		this.elements.submitButton.addEventListener('click', () => this.handleScoreSubmission());
+		this.elements.nicknameInput.addEventListener('keydown', e => {
+			if (e.key === 'Enter') this.handleScoreSubmission();
+		});
+
+		// Mobile controls
+		document.querySelectorAll('.control-btn').forEach(btn => {
+			btn.addEventListener('touchstart', e => {
+				e.preventDefault();
+				const direction = btn.id.replace('Btn', '');
+				this.handleMobileInput(direction);
+			});
+		});
+	}
+
+	handleMobileInput(direction) {
+		const directions = {
+			up: { x: 0, y: -1 },
+			down: { x: 0, y: 1 },
+			left: { x: -1, y: 0 },
+			right: { x: 1, y: 0 },
+		};
+
+		if (directions[direction]) {
+			const event = new KeyboardEvent('keydown', { key: `Arrow${direction.charAt(0).toUpperCase() + direction.slice(1)}` });
+			document.dispatchEvent(event);
+		}
+	}
+
+	async handleScoreSubmission() {
+		const nickname = this.elements.nicknameInput.value.trim();
+
+		if (!nickname) {
+			showToast('No nickname entered', false);
+			this.toggleModal(false);
+			this.game.reset();
+			return;
+		}
+
+		const result = await this.leaderboard.saveScore(nickname, this.game.state.score);
+		showToast(result.message, result.success);
+		this.toggleModal(false);
+		this.game.reset();
+	}
+
+	handleGameOver() {
+		this.toggleModal(true);
+	}
+
+	toggleModal(show = true) {
+		this.elements.gameOverModal.style.display = show ? 'block' : 'none';
+		if (show) {
+			this.elements.nicknameInput.focus();
+		} else {
+			this.game.reset();
+		}
+	}
+
+	updateComboDisplay() {
+		const container = document.getElementById('messageContainer');
+
+		// Clear previous status messages
+		const existingStatus = container.querySelectorAll('.status-message');
+		existingStatus.forEach(el => el.remove());
+
+		// Add persistent status messages
+		const { combo, glow } = this.state.effects;
+
+		if (combo.active) {
+			const message = document.createElement('div');
+			message.className = 'game-message status-message';
+			message.textContent = `COMBO x2 (${combo.remaining} left)`;
+			container.appendChild(message);
+		}
+
+		if (glow.active) {
+			const remaining = Math.ceil((glow.endTime - Date.now()) / 1000);
+			const message = document.createElement('div');
+			message.className = 'game-message status-message';
+			message.textContent = `GOLDEN GLOW: ${remaining}s`;
+			container.appendChild(message);
+		}
+	}
+
+	updateLevelDisplay() {
+		const progress = (Config.Game.BASE_SPEED - this.state.baseSpeed) / (Config.Game.BASE_SPEED - Config.Game.MIN_SPEED);
+		this.elements.levelBar.style.width = `${Math.min(progress * 100, 100)}%`;
+		this.elements.levelText.textContent = this.state.baseSpeed === Config.Game.MIN_SPEED ? 'MAX LEVEL!' : `Level ${this.state.level}`;
+	}
+
+	postUpdate() {
+		this.updateComboDisplay();
+		this.updateLevelDisplay();
+	}
+
+	postDraw() {
+		if (this.state.gameOver && !this.state.modalShown) {
+			this.state.modalShown = true;
+			this.toggleModal(true);
+		}
+	}
+}

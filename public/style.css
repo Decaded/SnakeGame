@@ -126,6 +126,19 @@ canvas {
 	box-shadow: 0 0 10px rgba(0, 255, 0, 0.5);
 }
 
+.leaderboard-error {
+	text-align: center;
+	padding: 1rem;
+	color: #ff4444;
+	border: 1px solid #ff4444;
+	border-radius: 4px;
+	margin: 1rem;
+}
+
+.leaderboard-error p {
+	margin: 0.5rem 0;
+}
+
 #leaderboard h2 {
 	margin-bottom: 10px;
 	font-size: 1.2em;
