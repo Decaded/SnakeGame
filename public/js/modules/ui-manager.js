@@ -1,5 +1,7 @@
-import { showToast } from '../utils/helpers.js';
 import { Config } from '../config.js';
+const importVersioned = path => import(`${path}?v=${Config.VERSION}`);
+
+const { showToast } = await importVersioned('../utils/helpers.js');
 
 export class UIManager {
 	constructor(game, leaderboard) {

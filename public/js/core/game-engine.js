@@ -1,10 +1,13 @@
-import { GameState } from './game-state.js';
-import { FoodSystem } from './food-system.js';
-import { InputController } from '../modules/input-controller.js';
-import { CollisionSystem } from '../modules/collision-system.js';
-import { SpeedManager } from '../modules/speed-manager.js';
-import { showToast } from '../utils/helpers.js';
 import { Config } from '../config.js';
+const importVersioned = (path) => import(`${path}?v=${Config.VERSION}`);
+
+const { GameState } = await importVersioned('./game-state.js');
+const { FoodSystem } = await importVersioned('./food-system.js');
+const { InputController } = await importVersioned('../modules/input-controller.js');
+const { CollisionSystem } = await importVersioned('../modules/collision-system.js');
+const { SpeedManager } = await importVersioned('../modules/speed-manager.js');
+const { showToast } = await importVersioned('../utils/helpers.js');
+
 
 export class GameEngine {
 	constructor() {

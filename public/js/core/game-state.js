@@ -1,5 +1,7 @@
 import { Config } from '../config.js';
-import { FoodSystem } from './food-system.js';
+const importVersioned = path => import(`${path}?v=${Config.VERSION}`);
+
+const { FoodSystem } = await importVersioned('./food-system.js');
 
 export class GameState {
 	constructor() {

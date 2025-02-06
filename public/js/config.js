@@ -1,4 +1,5 @@
 export const Config = {
+	VERSION: '1.1.0',
 	Game: {
 		GRID_SIZE: 20,
 		INITIAL_POS: { x: 10, y: 10 },

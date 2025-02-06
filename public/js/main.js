@@ -1,6 +1,21 @@
-import { GameEngine } from './core/game-engine.js';
-import { LeaderboardManager } from './utils/leaderboard.js';
-import { UIManager } from './modules/ui-manager.js';
+// Parse version from current script tag
+const version = new URL(import.meta.url).searchParams.get('v');
+
+// Version-aware config loader
+const loadConfig = async () => {
+	const { Config } = await import(`./config.js?v=${version}`);
+	return Config;
+};
+
+// Versioned dynamic imports
+const importVersioned = path => import(`${path}?v=${version}`);
+
+// Main flow
+const Config = await loadConfig();
+
+const { GameEngine } = await importVersioned('./core/game-engine.js');
+const { LeaderboardManager } = await importVersioned('./utils/leaderboard.js');
+const { UIManager } = await importVersioned('./modules/ui-manager.js');
 
 const game = new GameEngine();
 const leaderboard = new LeaderboardManager();
