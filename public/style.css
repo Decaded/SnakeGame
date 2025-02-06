@@ -115,6 +115,11 @@ canvas {
 	margin: 0 10px;
 }
 
+.control-btn.active {
+	transform: scale(0.9);
+	filter: brightness(1.2);
+}
+
 /* Leaderboard styles */
 #leaderboard {
 	margin-top: 10px;

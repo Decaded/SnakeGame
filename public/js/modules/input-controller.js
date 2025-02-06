@@ -18,32 +18,25 @@ export class InputController {
 	}
 
 	handleInput(e) {
-		// Prevent handling keys when typing in inputs
-		if (['INPUT', 'TEXTAREA'].includes(e.target.tagName)) {
-			return;
-		}
-
-		const directions = {
-			ArrowUp: { x: 0, y: -1 },
-			ArrowDown: { x: 0, y: 1 },
-			ArrowLeft: { x: -1, y: 0 },
-			ArrowRight: { x: 1, y: 0 },
-		};
-
-		// Ignore if key is already pressed
-		if (this.pressedKeys.has(e.key)) {
-			return;
-		}
+		if (['INPUT', 'TEXTAREA'].includes(e.target.tagName)) return;
 
 		const newDir = DIRECTION_MAP[e.key];
-		if (newDir && !this.isOpposite(newDir)) {
+		if (!newDir) return;
+
+		// Allow sustained key presses
+		if (this.pressedKeys.has(e.key)) return;
+
+		this.pressedKeys.add(e.key);
+		if (!this.isOpposite(newDir)) {
 			this.state.directionQueue.push(newDir);
-			this.pressedKeys.add(e.key); // Mark key as processed
 		}
 	}
 
 	handleKeyRelease(e) {
-		this.pressedKeys.delete(e.key); // Allow re-pressing the key
+		const key = e.key;
+		if (DIRECTION_MAP[key]) {
+			this.pressedKeys.delete(key);
+		}
 	}
 
 	isOpposite(newDir) {

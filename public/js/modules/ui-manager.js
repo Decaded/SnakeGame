@@ -28,28 +28,71 @@ export class UIManager {
 		});
 
 		// Mobile controls
+		// document.querySelectorAll('.control-btn').forEach(btn => {
+		// 	btn.addEventListener('touchstart', e => {
+		// 		e.preventDefault();
+		// 		const direction = btn.id.replace('Btn', '');
+		// 		this.handleMobileInput(direction);
+		// 	});
+		// });
+
+		// Mobile controls - translate touch events to keyboard events
 		document.querySelectorAll('.control-btn').forEach(btn => {
+			// Map button IDs to keyboard keys
+			const keyMap = {
+				upBtn: 'ArrowUp',
+				downBtn: 'ArrowDown',
+				leftBtn: 'ArrowLeft',
+				rightBtn: 'ArrowRight',
+			};
+
+			const key = keyMap[btn.id];
+			if (!key) return;
+
+			// Simulate keydown on touch start
 			btn.addEventListener('touchstart', e => {
 				e.preventDefault();
-				const direction = btn.id.replace('Btn', '');
-				this.handleMobileInput(direction);
+				this.simulateKeyEvent('keydown', key);
+				btn.classList.add('active');
 			});
+
+			// Simulate keyup on touch end
+			btn.addEventListener('touchend', e => {
+				e.preventDefault();
+				this.simulateKeyEvent('keyup', key);
+				btn.classList.remove('active');
+			});
+
+			// Prevent context menu on long press
+			btn.addEventListener('contextmenu', e => e.preventDefault());
 		});
 	}
 
-	handleMobileInput(direction) {
-		const directions = {
-			up: { x: 0, y: -1 },
-			down: { x: 0, y: 1 },
-			left: { x: -1, y: 0 },
-			right: { x: 1, y: 0 },
-		};
+	simulateKeyEvent(type, key) {
+		const event = new KeyboardEvent(type, {
+			key: key,
+			code: key,
+			bubbles: true,
+			cancelable: true,
+		});
 
-		if (directions[direction]) {
-			const event = new KeyboardEvent('keydown', { key: `Arrow${direction.charAt(0).toUpperCase() + direction.slice(1)}` });
-			document.dispatchEvent(event);
-		}
+		// Dispatch to document to leverage existing keyboard handling
+		document.dispatchEvent(event);
 	}
+
+	// handleMobileInput(direction) {
+	// 	const directions = {
+	// 		up: { x: 0, y: -1 },
+	// 		down: { x: 0, y: 1 },
+	// 		left: { x: -1, y: 0 },
+	// 		right: { x: 1, y: 0 },
+	// 	};
+
+	// 	if (directions[direction]) {
+	// 		const event = new KeyboardEvent('keydown', { key: `Arrow${direction.charAt(0).toUpperCase() + direction.slice(1)}` });
+	// 		document.dispatchEvent(event);
+	// 	}
+	// }
 
 	async handleScoreSubmission() {
 		const nickname = this.elements.nicknameInput.value.trim();
