@@ -1,5 +1,3 @@
-import { showToast } from '../utils/helpers.js';
-
 export class CollisionSystem {
 	init(state) {
 		this.state = state;
