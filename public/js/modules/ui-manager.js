@@ -1,6 +1,8 @@
-import { Config } from '../config.js';
-const importVersioned = path => import(`${path}?v=${Config.VERSION}`);
+// Use the global version from main.js
+const importVersioned = path => import(`${path}?v=${window.APP_VERSION}`);
 
+// Load modules dynamically with versioning
+const { Config } = await importVersioned('../config.js');
 const { showToast } = await importVersioned('../utils/helpers.js');
 
 export class UIManager {

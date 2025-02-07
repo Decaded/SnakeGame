@@ -1,13 +1,14 @@
-import { Config } from '../config.js';
-const importVersioned = (path) => import(`${path}?v=${Config.VERSION}`);
+// Use the global version from main.js
+const importVersioned = path => import(`${path}?v=${window.APP_VERSION}`);
 
+// Load modules dynamically with versioning
+const { Config } = await importVersioned('../config.js');
 const { GameState } = await importVersioned('./game-state.js');
 const { FoodSystem } = await importVersioned('./food-system.js');
 const { InputController } = await importVersioned('../modules/input-controller.js');
 const { CollisionSystem } = await importVersioned('../modules/collision-system.js');
 const { SpeedManager } = await importVersioned('../modules/speed-manager.js');
 const { showToast } = await importVersioned('../utils/helpers.js');
-
 
 export class GameEngine {
 	constructor() {
@@ -88,6 +89,20 @@ export class GameEngine {
 				}
 			}
 			this.state.score += this.state.food.points * this.state.level * multiplier;
+		} else if (this.state.food.type === 'hubrisBerry') {
+			const elapsed = (Date.now() - this.state.food.spawnTime) / 1000;
+			let multiplier = 3 - Config.Food.PROPERTIES.hubrisBerry.decayRate * elapsed;
+			multiplier = Math.max(multiplier, -3); // Cap at -3x
+
+			const points = this.state.food.points * multiplier;
+			this.state.score += points;
+
+			// Visual feedback
+			if (multiplier > 0) {
+				showToast(`${multiplier.toFixed(1)}x HUBRIS!`);
+			} else {
+				showToast('${Math.abs(multiplier.toFixed(1))x PENALTY!', false);
+			}
 		} else if (this.state.food.type === 'goldenApple') {
 			if (this.state.effects.combo.active) {
 				this.state.score *= 3;
@@ -168,26 +183,75 @@ export class GameEngine {
 		ctx.shadowBlur = 0;
 	}
 
+	// game-engine.js
 	drawFood() {
-		const { position, color, graphics } = this.state.food;
-		this.state.ctx.fillStyle = color;
+		const { position, type, color, graphics, spawnTime } = this.state.food;
+		const ctx = this.state.ctx;
 
-		if (graphics) {
-			Object.entries(graphics).forEach(([key, value]) => {
-				this.state.ctx[key] = value;
-			});
+		// Reset graphics properties
+		ctx.shadowBlur = 0;
+		ctx.shadowColor = 'transparent';
+
+		// Handle Hubris Berry separately
+		if (type === 'hubrisBerry') {
+			const elapsed = (Date.now() - spawnTime) / 1000;
+			const decayRate = Config.Food.PROPERTIES.hubrisBerry.decayRate;
+			const multiplier = 3 - decayRate * elapsed;
+
+			// Color progression: Indigo → Purple → Black
+			let currentColor;
+			if (multiplier >= 1.5) {
+				currentColor = '#4B0082'; // Bright indigo
+			} else if (multiplier >= 0) {
+				currentColor = '#8A2BE2'; // Purple
+			} else {
+				currentColor = '#2F4F4F'; // Dark slate
+			}
+
+			// Shadow effects
+			ctx.shadowColor = multiplier >= 0 ? '#4B0082' : '#2F4F4F';
+			ctx.shadowBlur = 15 + Math.abs(multiplier * 5);
+
+			// Draw the berry
+			ctx.fillStyle = currentColor;
+			ctx.beginPath();
+			ctx.arc(position.x * this.state.gridSize + this.state.gridSize / 2, position.y * this.state.gridSize + this.state.gridSize / 2, this.state.gridSize / 2 - 1, 0, Math.PI * 2);
+			ctx.fill();
+
+			// Add pulsing effect for positive multiplier
+			if (multiplier > 0) {
+				const pulse = Math.sin(Date.now() / 200) * 2;
+				ctx.lineWidth = 2;
+				ctx.strokeStyle = `rgba(75, 0, 130, ${0.5 + pulse * 0.2})`;
+				ctx.stroke();
+			}
+		}
+		// Handle other food types
+		else {
+			// Apply food-specific graphics
+			if (graphics) {
+				Object.entries(graphics).forEach(([key, value]) => {
+					ctx[key] = value;
+				});
+			}
+
+			// Draw the food
+			ctx.fillStyle = color;
+			ctx.beginPath();
+			ctx.arc(position.x * this.state.gridSize + this.state.gridSize / 2, position.y * this.state.gridSize + this.state.gridSize / 2, this.state.gridSize / 2 - 1, 0, Math.PI * 2);
+			ctx.fill();
+
+			// Special effects for golden apple
+			if (type === 'goldenApple') {
+				ctx.lineWidth = 2;
+				ctx.strokeStyle = 'rgba(255, 215, 0, 0.5)';
+				ctx.stroke();
+			}
 		}
 
-		this.state.ctx.beginPath();
-		this.state.ctx.arc(
-			position.x * this.state.gridSize + this.state.gridSize / 2,
-			position.y * this.state.gridSize + this.state.gridSize / 2,
-			this.state.gridSize / 2 - 1,
-			0,
-			Math.PI * 2,
-		);
-		this.state.ctx.fill();
-		this.state.ctx.shadowBlur = 0;
+		// Reset shadow properties
+		ctx.shadowBlur = 0;
+		ctx.shadowColor = 'transparent';
 	}
 
 	drawUI() {

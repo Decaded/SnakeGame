@@ -1,4 +1,8 @@
-import { Config } from '../config.js';
+// Use the global version from main.js
+const importVersioned = path => import(`${path}?v=${window.APP_VERSION}`);
+
+// Load config dynamically with versioning
+const { Config } = await importVersioned('../config.js');
 
 export class SpeedManager {
 	init(state) {

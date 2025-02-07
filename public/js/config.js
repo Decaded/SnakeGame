@@ -1,5 +1,4 @@
 export const Config = {
-	VERSION: '1.1.0',
 	Game: {
 		GRID_SIZE: 20,
 		INITIAL_POS: { x: 10, y: 10 },
@@ -13,9 +12,10 @@ export const Config = {
 	},
 	Food: {
 		SPAWN_PROBABILITIES: {
-			apple: 0.85,
+			apple: 0.7,
 			cherry: 0.1,
 			goldenApple: 0.05,
+			hubrisBerry: 0.15,
 		},
 		PROPERTIES: {
 			apple: {
@@ -34,6 +34,15 @@ export const Config = {
 				color: '#FFD700',
 				graphics: { shadowColor: '#FFD700', shadowBlur: 20 },
 				effect: { type: 'glow', duration: 2000, message: 'GOLDEN GLOW!' },
+			},
+			hubrisBerry: {
+				points: 5, // Base value before multiplier
+				color: '#4B0082', // Initial indigo
+				graphics: {
+					shadowColor: '#4B0082',
+					shadowBlur: 15,
+				},
+				decayRate: 0.5, // Multiplier lost per second
 			},
 		},
 	},

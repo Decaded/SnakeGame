@@ -479,6 +479,11 @@ body.tablet-device #infoSection {
 	box-shadow: 0 0 5px #ffd700;
 }
 
+.food-icon.hubris {
+	background-color: #4b0082;
+	box-shadow: 0 0 5px #4b0082;
+}
+
 .food-description {
 	vertical-align: middle;
 }

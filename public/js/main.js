@@ -1,33 +1,30 @@
-// Parse version from current script tag
+// Parse version from the current script tag and store it globally.
 const version = new URL(import.meta.url).searchParams.get('v');
+window.APP_VERSION = version;
 
-// Version-aware config loader
-const loadConfig = async () => {
-	const { Config } = await import(`./config.js?v=${version}`);
-	return Config;
-};
+// Versioned dynamic import using the global version.
+const importVersioned = path => import(`${path}?v=${window.APP_VERSION}`);
 
-// Versioned dynamic imports
-const importVersioned = path => import(`${path}?v=${version}`);
+// Load all modules concurrently.
+const [{ GameEngine }, { LeaderboardManager }, { UIManager }] = await Promise.all([
+	importVersioned('./core/game-engine.js'),
+	importVersioned('./utils/leaderboard.js'),
+	importVersioned('./modules/ui-manager.js'),
+]);
 
-// Main flow
-const Config = await loadConfig();
-
-const { GameEngine } = await importVersioned('./core/game-engine.js');
-const { LeaderboardManager } = await importVersioned('./utils/leaderboard.js');
-const { UIManager } = await importVersioned('./modules/ui-manager.js');
-
+// Initialize game components.
 const game = new GameEngine();
 const leaderboard = new LeaderboardManager();
 const ui = new UIManager(game, leaderboard);
 
-// Initialize core modules
+// Connect modules: add the UI module to the game engine.
 game.addModule(ui);
 
-// Initialize leaderboard
+// Initialize the leaderboard.
 leaderboard.init();
 
-// Start the game
+// Start the game.
 game.start();
 
+// Clean up on unload.
 window.addEventListener('beforeunload', () => leaderboard.destroy());
