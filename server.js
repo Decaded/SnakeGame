@@ -1,22 +1,24 @@
-require('dotenv').config();
-const express = require('express');
-const cors = require('cors');
-const helmet = require('helmet');
-const rateLimit = require('express-rate-limit');
-const { body, validationResult } = require('express-validator');
-const xss = require('xss-clean');
-const sanitizeHtml = require('sanitize-html');
-const NyaDB = require('@decaded/nyadb');
-const morgan = require('morgan');
-const Filter = require('bad-words');
+import dotenv from 'dotenv';
+dotenv.config();
+
+import express from 'express';
+import cors from 'cors';
+import helmet from 'helmet';
+import rateLimit from 'express-rate-limit';
+import { body, validationResult } from 'express-validator';
+import xss from 'xss-clean';
+import sanitizeHtml from 'sanitize-html';
+import NyaDB from '@decaded/nyadb';
+import morgan from 'morgan';
+import Filter from 'bad-words';
 
 const app = express();
 
-// Configuration
+// Configuration variables
 const PORT = process.env.PORT;
 const ALLOWED_ORIGIN = process.env.CORS_ORIGIN || 'https://decaded.dev';
 
-// Setup profanity filter and optionally add custom words
+// Setup profanity filter
 const profanityFilter = new Filter();
 
 // Rate limiting setup
@@ -37,7 +39,6 @@ app.use(helmet());
 app.use(xss());
 app.use(limiter);
 app.use(morgan(process.env.NODE_ENV === 'production' ? 'combined' : 'dev'));
-// Use built-in Express parsers
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 
@@ -58,7 +59,7 @@ function verifyOrigin(req, res, next) {
 	// Allow GET requests without an origin check.
 	if (req.method === 'GET') return next();
 
-	// For non-GET, check that the Origin header exists and matches our allowed domain.
+	// For non-GET requests, ensure the Origin header matches our allowed domain.
 	if (req.headers.origin && req.headers.origin === ALLOWED_ORIGIN) {
 		return next();
 	}
@@ -70,8 +71,7 @@ function verifyOrigin(req, res, next) {
 
 // CORS configuration for POST routes (only allow the allowed domain)
 const corsOptionsForPost = {
-	origin: function (origin, callback) {
-		// The Origin header must match our allowed domain.
+	origin: (origin, callback) => {
 		if (origin === ALLOWED_ORIGIN) {
 			callback(null, true);
 		} else {
@@ -108,8 +108,7 @@ app.post(
 	]),
 	async (req, res) => {
 		try {
-			let { nick, score } = req.body;
-			// Sanitize the nickname to strip out any unwanted HTML
+			const { nick, score } = req.body;
 			const sanitizedNick = sanitizeHtml(nick);
 
 			// Check for profanity in the sanitized nickname
@@ -188,10 +187,10 @@ app.use((err, req, res, next) => {
 });
 
 // Start the server
-if (require.main === module) {
+if (process.argv[1] === new URL(import.meta.url).pathname) {
 	app.listen(PORT, () => {
 		console.log(`Server running in ${process.env.NODE_ENV || 'development'} mode on port ${PORT}`);
 	});
 }
 
-module.exports = app;
+export default app;
