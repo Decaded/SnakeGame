@@ -17,9 +17,7 @@ export class LeaderboardManager {
 
 	async fetchTopPlayers() {
 		try {
-			const response = await fetch(`${this.API_BASE}/getTopPlayers`, {
-				credentials: 'include',
-			});
+			const response = await fetch(`${this.API_BASE}/getTopPlayers`);
 
 			if (!response.ok) throw new Error('Server error');
 
