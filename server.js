@@ -81,10 +81,6 @@ const corsOptionsForGet = {
 	methods: ['GET', 'OPTIONS'],
 };
 
-// We'll be using a profanity filter in our /saveScore route.
-// Since bad-words is an ES module, we’ll load it dynamically and store it globally.
-global.profanityFilter = null;
-
 // POST /saveScore – Only accept if the request comes from ALLOWED_ORIGIN
 app.post(
 	'/saveScore',
@@ -103,20 +99,7 @@ app.post(
 			const { nick, score } = req.body;
 			const sanitizedNick = sanitizeHtml(nick);
 
-			// Ensure that our profanity filter has been initialized.
-			if (!global.profanityFilter) {
-				return res.status(500).json({
-					success: false,
-					message: 'Profanity filter not initialized',
-				});
-			}
-
-			if (global.profanityFilter.isProfane(sanitizedNick)) {
-				return res.status(422).json({
-					success: false,
-					message: 'Nickname contains inappropriate language',
-				});
-			}
+			// TODO: Implement profanity filter here
 
 			const scores = db.get('scores') || {};
 			const currentScore = scores[sanitizedNick] || 0;
@@ -185,19 +168,9 @@ app.use((err, req, res, next) => {
 	});
 });
 
-// Dynamically import the ES module "bad-words" and initialize our profanity filter.
-// Once it's ready, start the server.
-import('bad-words')
-	.then(module => {
-		const Filter = module.default;
-		global.profanityFilter = new Filter();
-		global.profanityFilter.addWords('hitler', 'cojones');
+// Start the server
+app.listen(PORT, () => {
+	console.log(`Server running in ${process.env.NODE_ENV || 'development'} mode on port ${PORT}`);
+});
 
-		app.listen(PORT, () => {
-			console.log(`Server running in ${process.env.NODE_ENV || 'development'} mode on port ${PORT}`);
-		});
-	})
-	.catch(error => {
-		console.error('Error importing bad-words module:', error);
-		process.exit(1);
-	});
+module.exports = app;
