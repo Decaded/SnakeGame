@@ -1,6 +1,5 @@
 require('dotenv').config();
 const express = require('express');
-const bodyParser = require('body-parser');
 const cors = require('cors');
 const helmet = require('helmet');
 const rateLimit = require('express-rate-limit');
@@ -9,53 +8,40 @@ const xss = require('xss-clean');
 const sanitizeHtml = require('sanitize-html');
 const NyaDB = require('@decaded/nyadb');
 const morgan = require('morgan');
+const Filter = require('bad-words');
 
-// Initialize Express
 const app = express();
 
 // Configuration
-const config = {
-	port: process.env.PORT,
-	cors: {
-		origin: process.env.CORS_ORIGIN || 'https://decaded.dev',
-		methods: ['GET', 'POST', 'OPTIONS'],
-		allowedHeaders: ['Content-Type'],
-		credentials: true,
-	},
-	rateLimit: {
-		windowMs: 15 * 60 * 1000, // 15 minutes
-		max: 100, // Limit each IP to 100 requests per windowMs
-		standardHeaders: true,
-		legacyHeaders: false,
-	},
-};
+const PORT = process.env.PORT;
+const ALLOWED_ORIGIN = process.env.CORS_ORIGIN || 'https://decaded.dev';
 
-// Database Setup
-const initializeDatabase = () => {
-	const nyadb = new NyaDB();
-	nyadb.create('scores');
-	return nyadb;
-};
+// Setup profanity filter and optionally add custom words
+const profanityFilter = new Filter();
 
-const db = initializeDatabase();
+// Rate limiting setup
+const limiter = rateLimit({
+	windowMs: 15 * 60 * 1000, // 15 minutes
+	max: 100, // max 100 requests per window per IP
+	standardHeaders: true,
+	legacyHeaders: false,
+});
 
+// Database initialization
+const db = new NyaDB();
+db.create('scores');
+
+// Middleware setup
 app.set('trust proxy', 1);
-
-// Security Middleware
 app.use(helmet());
 app.use(xss());
-app.use(cors(config.cors));
-app.use(bodyParser.json());
-app.use(bodyParser.urlencoded({ extended: false }));
-
-// Logging
+app.use(limiter);
 app.use(morgan(process.env.NODE_ENV === 'production' ? 'combined' : 'dev'));
+// Use built-in Express parsers
+app.use(express.json());
+app.use(express.urlencoded({ extended: false }));
 
-// Rate Limiting
-const apiLimiter = rateLimit(config.rateLimit);
-app.use('/', apiLimiter);
-
-// Validation Middleware
+// Validation middleware helper
 const validateRequest = validations => [
 	validations,
 	(req, res, next) => {
@@ -67,9 +53,51 @@ const validateRequest = validations => [
 	},
 ];
 
-// API Routes
+// Custom middleware to verify the origin for non-GET requests
+function verifyOrigin(req, res, next) {
+	// Allow GET requests without an origin check.
+	if (req.method === 'GET') return next();
+
+	// For non-GET, check that the Origin header exists and matches our allowed domain.
+	if (req.headers.origin && req.headers.origin === ALLOWED_ORIGIN) {
+		return next();
+	}
+	return res.status(403).json({
+		success: false,
+		message: 'Forbidden: Invalid origin',
+	});
+}
+
+// CORS configuration for POST routes (only allow the allowed domain)
+const corsOptionsForPost = {
+	origin: function (origin, callback) {
+		// The Origin header must match our allowed domain.
+		if (origin === ALLOWED_ORIGIN) {
+			callback(null, true);
+		} else {
+			callback(new Error('Not allowed by CORS'));
+		}
+	},
+	methods: ['POST', 'OPTIONS'],
+	allowedHeaders: ['Content-Type'],
+	credentials: true,
+};
+
+// CORS configuration for GET routes (allow any origin)
+const corsOptionsForGet = {
+	origin: '*',
+	methods: ['GET', 'OPTIONS'],
+};
+
+// --------------------
+// Routes
+// --------------------
+
+// POST /saveScore – Only accept if the request comes from ALLOWED_ORIGIN
 app.post(
 	'/saveScore',
+	verifyOrigin,
+	cors(corsOptionsForPost),
 	validateRequest([
 		body('nick')
 			.trim()
@@ -80,8 +108,17 @@ app.post(
 	]),
 	async (req, res) => {
 		try {
-			const { nick, score } = req.body;
+			let { nick, score } = req.body;
+			// Sanitize the nickname to strip out any unwanted HTML
 			const sanitizedNick = sanitizeHtml(nick);
+
+			// Check for profanity in the sanitized nickname
+			if (profanityFilter.isProfane(sanitizedNick)) {
+				return res.status(422).json({
+					success: false,
+					message: 'Nickname contains inappropriate language',
+				});
+			}
 
 			const scores = db.get('scores') || {};
 			const currentScore = scores[sanitizedNick] || 0;
@@ -92,7 +129,7 @@ app.post(
 				return res.json({
 					success: true,
 					message: 'Score saved successfully',
-					newHighScore: score > currentScore,
+					newHighScore: true,
 				});
 			}
 
@@ -111,7 +148,8 @@ app.post(
 	},
 );
 
-app.get('/getTopPlayers', (req, res) => {
+// GET /getTopPlayers – Open to any origin
+app.get('/getTopPlayers', cors(corsOptionsForGet), (req, res) => {
 	try {
 		const scores = db.get('scores') || {};
 		const topPlayers = Object.entries(scores)
@@ -132,7 +170,15 @@ app.get('/getTopPlayers', (req, res) => {
 	}
 });
 
-// Error Handling
+// Catch-all for undefined routes (404)
+app.use((req, res) => {
+	res.status(404).json({
+		success: false,
+		message: 'Not Found',
+	});
+});
+
+// Global error handler
 app.use((err, req, res, next) => {
 	console.error(err.stack);
 	res.status(500).json({
@@ -141,17 +187,11 @@ app.use((err, req, res, next) => {
 	});
 });
 
-// Server Initialization
-const startServer = () => {
-	app.listen(config.port, () => {
-		console.log(`Server running in ${process.env.NODE_ENV || 'development'} mode`);
-		console.log(`Listening on port ${config.port}`);
-	});
-};
-
 // Start the server
 if (require.main === module) {
-	startServer();
+	app.listen(PORT, () => {
+		console.log(`Server running in ${process.env.NODE_ENV || 'development'} mode on port ${PORT}`);
+	});
 }
 
 module.exports = app;
