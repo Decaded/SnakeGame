@@ -94,14 +94,16 @@ export class GameEngine {
 			let multiplier = 3 - Config.Food.PROPERTIES.hubrisBerry.decayRate * elapsed;
 			multiplier = Math.max(multiplier, -3); // Cap at -3x
 
-			const points = this.state.food.points * multiplier;
+			// Calculate points and round to avoid decimals in the score
+			const rawPoints = this.state.food.points * multiplier;
+			const points = Math.round(rawPoints);
 			this.state.score += points;
 
-			// Visual feedback
+			// Visual feedback with correct string interpolation
 			if (multiplier > 0) {
 				showToast(`${multiplier.toFixed(1)}x HUBRIS!`);
 			} else {
-				showToast('${Math.abs(multiplier.toFixed(1))x PENALTY!', false);
+				showToast(`${Math.abs(multiplier).toFixed(1)}x PENALTY!`, false);
 			}
 		} else if (this.state.food.type === 'goldenApple') {
 			if (this.state.effects.combo.active) {
