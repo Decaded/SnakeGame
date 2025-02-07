@@ -1,5 +1,6 @@
 require('dotenv').config();
 const express = require('express');
+const bodyParser = require('body-parser');
 const cors = require('cors');
 const helmet = require('helmet');
 const rateLimit = require('express-rate-limit');
@@ -9,33 +10,52 @@ const sanitizeHtml = require('sanitize-html');
 const NyaDB = require('@decaded/nyadb');
 const morgan = require('morgan');
 
+// Initialize Express
 const app = express();
 
-const PORT = process.env.PORT;
-const ALLOWED_ORIGIN = process.env.CORS_ORIGIN || 'https://decaded.dev';
+// Configuration
+const config = {
+	port: process.env.PORT,
+	cors: {
+		origin: process.env.CORS_ORIGIN || 'https://decaded.dev',
+		methods: ['GET', 'POST', 'OPTIONS'],
+		allowedHeaders: ['Content-Type'],
+		credentials: true,
+	},
+	rateLimit: {
+		windowMs: 15 * 60 * 1000, // 15 minutes
+		max: 100, // Limit each IP to 100 requests per windowMs
+		standardHeaders: true,
+		legacyHeaders: false,
+	},
+};
 
-// Rate limiting setup
-const limiter = rateLimit({
-	windowMs: 15 * 60 * 1000, // 15 minutes
-	max: 100, // max 100 requests per window per IP
-	standardHeaders: true,
-	legacyHeaders: false,
-});
+// Database Setup
+const initializeDatabase = () => {
+	const nyadb = new NyaDB();
+	nyadb.create('scores');
+	return nyadb;
+};
 
-// Database initialization
-const db = new NyaDB();
-db.create('scores');
+const db = initializeDatabase();
 
-// Middleware setup
 app.set('trust proxy', 1);
+
+// Security Middleware
 app.use(helmet());
 app.use(xss());
-app.use(limiter);
-app.use(morgan(process.env.NODE_ENV === 'production' ? 'combined' : 'dev'));
-app.use(express.json());
-app.use(express.urlencoded({ extended: false }));
+app.use(cors(config.cors));
+app.use(bodyParser.json());
+app.use(bodyParser.urlencoded({ extended: false }));
 
-// Validation middleware helper
+// Logging
+app.use(morgan(process.env.NODE_ENV === 'production' ? 'combined' : 'dev'));
+
+// Rate Limiting
+const apiLimiter = rateLimit(config.rateLimit);
+app.use('/', apiLimiter);
+
+// Validation Middleware
 const validateRequest = validations => [
 	validations,
 	(req, res, next) => {
@@ -47,45 +67,9 @@ const validateRequest = validations => [
 	},
 ];
 
-// Custom middleware to verify the origin for non-GET requests
-function verifyOrigin(req, res, next) {
-	// Allow GET requests without an origin check.
-	if (req.method === 'GET') return next();
-	// For non-GET, ensure the Origin header matches our allowed domain.
-	if (req.headers.origin && req.headers.origin === ALLOWED_ORIGIN) {
-		return next();
-	}
-	return res.status(403).json({
-		success: false,
-		message: 'Forbidden: Invalid origin',
-	});
-}
-
-// CORS configuration for POST routes (only allow the allowed domain)
-const corsOptionsForPost = {
-	origin: function (origin, callback) {
-		if (origin === ALLOWED_ORIGIN) {
-			callback(null, true);
-		} else {
-			callback(new Error('Not allowed by CORS'));
-		}
-	},
-	methods: ['POST', 'OPTIONS'],
-	allowedHeaders: ['Content-Type'],
-	credentials: true,
-};
-
-// CORS configuration for GET routes (allow any origin)
-const corsOptionsForGet = {
-	origin: '*',
-	methods: ['GET', 'OPTIONS'],
-};
-
-// POST /saveScore – Only accept if the request comes from ALLOWED_ORIGIN
+// API Routes
 app.post(
 	'/saveScore',
-	verifyOrigin,
-	cors(corsOptionsForPost),
 	validateRequest([
 		body('nick')
 			.trim()
@@ -99,8 +83,6 @@ app.post(
 			const { nick, score } = req.body;
 			const sanitizedNick = sanitizeHtml(nick);
 
-			// TODO: Implement profanity filter here
-
 			const scores = db.get('scores') || {};
 			const currentScore = scores[sanitizedNick] || 0;
 
@@ -110,7 +92,7 @@ app.post(
 				return res.json({
 					success: true,
 					message: 'Score saved successfully',
-					newHighScore: true,
+					newHighScore: score > currentScore,
 				});
 			}
 
@@ -129,8 +111,7 @@ app.post(
 	},
 );
 
-// GET /getTopPlayers – Open to any origin
-app.get('/getTopPlayers', cors(corsOptionsForGet), (req, res) => {
+app.get('/getTopPlayers', (req, res) => {
 	try {
 		const scores = db.get('scores') || {};
 		const topPlayers = Object.entries(scores)
@@ -151,15 +132,7 @@ app.get('/getTopPlayers', cors(corsOptionsForGet), (req, res) => {
 	}
 });
 
-// Catch-all for undefined routes (404)
-app.use((req, res) => {
-	res.status(404).json({
-		success: false,
-		message: 'Not Found',
-	});
-});
-
-// Global error handler
+// Error Handling
 app.use((err, req, res, next) => {
 	console.error(err.stack);
 	res.status(500).json({
@@ -168,9 +141,17 @@ app.use((err, req, res, next) => {
 	});
 });
 
+// Server Initialization
+const startServer = () => {
+	app.listen(config.port, () => {
+		console.log(`Server running in ${process.env.NODE_ENV || 'development'} mode`);
+		console.log(`Listening on port ${config.port}`);
+	});
+};
+
 // Start the server
-app.listen(PORT, () => {
-	console.log(`Server running in ${process.env.NODE_ENV || 'development'} mode on port ${PORT}`);
-});
+if (require.main === module) {
+	startServer();
+}
 
 module.exports = app;
