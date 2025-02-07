@@ -1,25 +1,18 @@
-import dotenv from 'dotenv';
-dotenv.config();
-
-import express from 'express';
-import cors from 'cors';
-import helmet from 'helmet';
-import rateLimit from 'express-rate-limit';
-import { body, validationResult } from 'express-validator';
-import xss from 'xss-clean';
-import sanitizeHtml from 'sanitize-html';
-import NyaDB from '@decaded/nyadb';
-import morgan from 'morgan';
-import Filter from 'bad-words';
+require('dotenv').config();
+const express = require('express');
+const cors = require('cors');
+const helmet = require('helmet');
+const rateLimit = require('express-rate-limit');
+const { body, validationResult } = require('express-validator');
+const xss = require('xss-clean');
+const sanitizeHtml = require('sanitize-html');
+const NyaDB = require('@decaded/nyadb');
+const morgan = require('morgan');
 
 const app = express();
 
-// Configuration variables
 const PORT = process.env.PORT;
 const ALLOWED_ORIGIN = process.env.CORS_ORIGIN || 'https://decaded.dev';
-
-// Setup profanity filter
-const profanityFilter = new Filter();
 
 // Rate limiting setup
 const limiter = rateLimit({
@@ -58,8 +51,7 @@ const validateRequest = validations => [
 function verifyOrigin(req, res, next) {
 	// Allow GET requests without an origin check.
 	if (req.method === 'GET') return next();
-
-	// For non-GET requests, ensure the Origin header matches our allowed domain.
+	// For non-GET, ensure the Origin header matches our allowed domain.
 	if (req.headers.origin && req.headers.origin === ALLOWED_ORIGIN) {
 		return next();
 	}
@@ -71,7 +63,7 @@ function verifyOrigin(req, res, next) {
 
 // CORS configuration for POST routes (only allow the allowed domain)
 const corsOptionsForPost = {
-	origin: (origin, callback) => {
+	origin: function (origin, callback) {
 		if (origin === ALLOWED_ORIGIN) {
 			callback(null, true);
 		} else {
@@ -89,9 +81,9 @@ const corsOptionsForGet = {
 	methods: ['GET', 'OPTIONS'],
 };
 
-// --------------------
-// Routes
-// --------------------
+// We'll be using a profanity filter in our /saveScore route.
+// Since bad-words is an ES module, we’ll load it dynamically and store it globally.
+global.profanityFilter = null;
 
 // POST /saveScore – Only accept if the request comes from ALLOWED_ORIGIN
 app.post(
@@ -111,8 +103,15 @@ app.post(
 			const { nick, score } = req.body;
 			const sanitizedNick = sanitizeHtml(nick);
 
-			// Check for profanity in the sanitized nickname
-			if (profanityFilter.isProfane(sanitizedNick)) {
+			// Ensure that our profanity filter has been initialized.
+			if (!global.profanityFilter) {
+				return res.status(500).json({
+					success: false,
+					message: 'Profanity filter not initialized',
+				});
+			}
+
+			if (global.profanityFilter.isProfane(sanitizedNick)) {
 				return res.status(422).json({
 					success: false,
 					message: 'Nickname contains inappropriate language',
@@ -186,11 +185,19 @@ app.use((err, req, res, next) => {
 	});
 });
 
-// Start the server
-if (process.argv[1] === new URL(import.meta.url).pathname) {
-	app.listen(PORT, () => {
-		console.log(`Server running in ${process.env.NODE_ENV || 'development'} mode on port ${PORT}`);
-	});
-}
+// Dynamically import the ES module "bad-words" and initialize our profanity filter.
+// Once it's ready, start the server.
+import('bad-words')
+	.then(module => {
+		const Filter = module.default;
+		global.profanityFilter = new Filter();
+		global.profanityFilter.addWords('hitler', 'cojones');
 
-export default app;
+		app.listen(PORT, () => {
+			console.log(`Server running in ${process.env.NODE_ENV || 'development'} mode on port ${PORT}`);
+		});
+	})
+	.catch(error => {
+		console.error('Error importing bad-words module:', error);
+		process.exit(1);
+	});
