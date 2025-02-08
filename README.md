@@ -1,3 +1,5 @@
+# ⚠ WORK IN PROGRESS ⚠
+
 # Snake Game
 
 A classic Snake Game built with HTML, CSS, and JavaScript. The game features a leaderboard that stores the top 10 players' scores using a lightweight file-based database ([NyaDB](https://github.com/Decaded/NyaDB)).
