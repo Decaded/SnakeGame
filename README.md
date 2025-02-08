@@ -1,7 +1,9 @@
+# ⚠ WORK IN PROGRESS ⚠
+
 # Snake Game
 
-A classic Snake Game built with HTML, CSS, and JavaScript. The game features a leaderboard that stores the top 10 players' scores using a lightweight file-based database ([NyaDB](https://github.com/Decaded/NyaDB)).
-
+A classic Snake Game built with HTML, CSS, and JavaScript. The game features a leaderboard that stores the top 10 players' scores using a lightweight file-based database
+([NyaDB](https://github.com/Decaded/NyaDB)).
 
 ## Features
 
@@ -36,17 +38,20 @@ A classic Snake Game built with HTML, CSS, and JavaScript. The game features a l
 ### Steps
 
 1. **Clone the repository**:
+
    ```bash
    git clone https://github.com/Decaded/snake-game.git
    cd snake-game
    ```
 
 2. **Install dependencies**:
+
    ```bash
    npm install
    ```
 
 3. **Start the server**:
+
    ```bash
    node server.js
    ```
@@ -70,6 +75,7 @@ snake-game/
 ## API Endpoints
 
 - **Save Score**: `POST /saveScore`
+
   - Request Body: `{ nick: string, score: number }`
   - Response: `{ success: boolean, message: string }`
 
