@@ -16,11 +16,13 @@ require('./src/db');
 
 // Middlewares
 app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
-app.use(morgan(process.env.NODE_ENV === 'production' ? 'combined' : 'dev'));
 
 // Security middlewares
 securityMiddlewares.forEach(middleware => app.use(middleware));
+
+// Middlewares continued
+app.use(express.urlencoded({ extended: true }));
+app.use(morgan(process.env.NODE_ENV === 'production' ? 'combined' : 'dev'));
 
 // Routes
 app.use('/SnakeGame', scoresRouter);
