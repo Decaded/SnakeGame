@@ -23,7 +23,7 @@ app.use(morgan(process.env.NODE_ENV === 'production' ? 'combined' : 'dev'));
 securityMiddlewares.forEach(middleware => app.use(middleware));
 
 // Routes
-app.use('/api', scoresRouter);
+app.use('/SnakeGame', scoresRouter);
 
 // Error handling
 app.use(errorHandler);
