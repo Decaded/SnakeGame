@@ -8,6 +8,9 @@ const scoresRouter = require('./src/routes/scores.route');
 
 const app = express();
 
+// Trust cloudflare and nginx proxies
+app.set('trust proxy', 2);
+
 // Database initialization
 require('./src/db');
 
