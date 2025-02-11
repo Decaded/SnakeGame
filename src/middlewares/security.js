@@ -47,7 +47,7 @@ module.exports = [
 	}),
 	cors({
 		origin: 'https://decaded.dev',
-		methods: ['GET', 'POST'],
+		methods: ['GET', 'POST', 'OPTIONS'],
 		allowedHeaders: ['Content-Type'],
 		exposedHeaders: ['X-RateLimit-Limit', 'X-RateLimit-Remaining'],
 	}),
