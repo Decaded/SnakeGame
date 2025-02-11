@@ -91,19 +91,33 @@ export class UIManager {
 				if (result.token) {
 					// Show token warning but keep modal open
 					this.showTokenWarning(result.token);
-					showToast(result.message, true);
+					showToast('Nickname claimed! Save your token below', true);
 				} else {
-					// Only close modal for existing users
+					// Existing user flow
 					this.toggleModal(false);
 					this.game.reset();
-					showToast(result.message, true);
+					showToast('Score updated successfully!', true);
 				}
 			} else {
-				showToast(result.message, false);
+				if (result.message.includes('already exists')) {
+					this.promptForExistingToken(nickname);
+				} else {
+					showToast(result.message, false);
+				}
 			}
 		} catch (error) {
 			showToast('Failed to save score', false);
 			console.error('Submission error:', error);
+		}
+	}
+
+	promptForExistingToken(nickname) {
+		const token = prompt(`"${nickname}" is already claimed. Enter your token:`);
+		if (token) {
+			localStorage.setItem(`snakeToken_${nickname}`, token);
+			this.handleScoreSubmission(); // Retry with new token
+		} else {
+			showToast('Score not saved - token required', false);
 		}
 	}
 

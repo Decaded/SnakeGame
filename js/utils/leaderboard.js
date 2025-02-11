@@ -49,38 +49,58 @@ export class LeaderboardManager {
 
 	async saveScore(nickname, score) {
 		if (this.isServerOffline) {
-			return this.handleOfflineState();
+			return {
+				success: false,
+				message: 'Score not saved - server offline',
+			};
 		}
 
 		try {
 			const storedToken = localStorage.getItem(`snakeToken_${nickname}`);
 			let token = storedToken || '';
+			let isNewClaim = false;
 
+			// Only attempt claim if no token exists
 			if (!storedToken) {
-				const claimResponse = await this.handleNewNickname(nickname);
+				const claimResponse = await this.handleNicknameClaim(nickname);
 				if (!claimResponse.success) return claimResponse;
+
 				token = claimResponse.token;
+				isNewClaim = true;
 			}
 
-			const response = await fetch(`${this.API_BASE}/saveScore`, {
+			const saveResponse = await fetch(`${this.API_BASE}/saveScore`, {
 				method: 'POST',
 				headers: { 'Content-Type': 'application/json' },
 				body: JSON.stringify({ nick: nickname, score, token }),
 			});
 
-			if (response.status === 403) {
+			if (saveResponse.status === 403) {
 				return this.handleInvalidToken(nickname);
 			}
 
-			if (!response.ok) throw new Error('Save failed');
+			if (!saveResponse.ok) throw new Error('Save failed');
 
-			return this.handleSuccessResponse(nickname, token, await response.json());
+			// Store token only after successful save
+			if (isNewClaim) {
+				localStorage.setItem(`snakeToken_${nickname}`, token);
+			}
+
+			return {
+				success: true,
+				message: 'Score saved successfully',
+				token: isNewClaim ? token : undefined,
+			};
 		} catch (error) {
-			return this.handleSaveError(error);
+			console.error('Save error:', error);
+			return {
+				success: false,
+				message: 'Failed to save score',
+			};
 		}
 	}
 
-	async handleNewNickname(nickname) {
+	async handleNicknameClaim(nickname) {
 		try {
 			const response = await fetch(`${this.API_BASE}/claimNick`, {
 				method: 'POST',
@@ -91,14 +111,14 @@ export class LeaderboardManager {
 			if (response.status === 409) {
 				return {
 					success: false,
-					message: 'Nickname taken. Enter your token below',
+					message: 'Nickname already exists. Please enter your token.',
 				};
 			}
 
 			if (!response.ok) throw new Error('Claim failed');
 
-			const { token, warning } = await response.json();
-			return { success: true, token, message: warning };
+			const { token } = await response.json();
+			return { success: true, token };
 		} catch (error) {
 			console.error('Claim error:', error);
 			return {
