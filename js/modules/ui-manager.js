@@ -60,6 +60,15 @@ export class UIManager {
 
 			// Prevent context menu on long press
 			btn.addEventListener('contextmenu', e => e.preventDefault());
+
+			// Clear cache button
+			document.getElementById('clearCacheButton').addEventListener('click', () => {
+				const nickname = this.elements.nicknameInput.value.trim();
+				if (nickname) {
+					localStorage.removeItem(`snakeToken_${nickname}`);
+					showToast('Local cache cleared for ' + nickname, true);
+				}
+			});
 		});
 	}
 
@@ -82,6 +91,11 @@ export class UIManager {
 		if (!nickname) {
 			showToast('Please enter a nickname', false);
 			return;
+		}
+
+		// Clear cached token if server was offline
+		if (this.leaderboard.isServerOffline) {
+			localStorage.removeItem(`snakeToken_${nickname}`);
 		}
 
 		try {

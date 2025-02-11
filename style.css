@@ -521,6 +521,22 @@ body.tablet-device #infoSection {
 	font-size: 0.7em;
 }
 
+.cache-button {
+	position: absolute;
+	top: 10px;
+	right: 10px;
+	background: none;
+	border: none;
+	color: #ff4444;
+	cursor: pointer;
+	font-family: 'Press Start 2P', cursive;
+	font-size: 0.6em;
+}
+
+.cache-button:hover {
+	color: #ff0000;
+}
+
 /* MOBILE VIEW (max-width: 600px) */
 @media (max-width: 600px) {
 	#gameUI {

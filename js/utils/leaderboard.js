@@ -132,6 +132,14 @@ export class LeaderboardManager {
 		localStorage.removeItem(`snakeToken_${nickname}`);
 		this.tokenAttempts++;
 
+		// Auto-retry claim if server might have been reset
+		if (this.tokenAttempts === 1) {
+			const claimResult = await this.handleNicknameClaim(nickname);
+			if (claimResult.success) {
+				return this.saveScore(nickname, score); // Recursive retry
+			}
+		}
+
 		if (this.tokenAttempts >= this.MAX_ATTEMPTS) {
 			return {
 				success: false,
@@ -139,13 +147,10 @@ export class LeaderboardManager {
 			};
 		}
 
-		const userToken = prompt(`Invalid token for "${nickname}". Attempt ${this.tokenAttempts}/${this.MAX_ATTEMPTS}\nEnter correct token:`);
+		const userToken = prompt(`Invalid token for "${nickname}". Attempt ${this.tokenAttempts}/${this.MAX_ATTEMPTS}\nEnter correct token or leave blank for new claim:`);
 
 		if (!userToken) {
-			return {
-				success: false,
-				message: 'Score submission canceled',
-			};
+			return this.handleNicknameClaim(nickname); // Initiate new claim
 		}
 
 		localStorage.setItem(`snakeToken_${nickname}`, userToken);
