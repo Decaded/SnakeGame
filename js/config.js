@@ -12,10 +12,11 @@ export const Config = {
 	},
 	Food: {
 		SPAWN_PROBABILITIES: {
-			apple: 0.7,
-			cherry: 0.1,
-			goldenApple: 0.05,
-			hubrisBerry: 0.15,
+			apple: 0.799, // ~79.9% (the rest)
+			cherry: 0.15, // 15% (common)
+			goldenApple: 0.01, // 1% (rare)
+			hubrisBerry: 0.04, // 4% (rare)
+			glitchBerry: 0.001, // 0.1% (extremely rare)
 		},
 		PROPERTIES: {
 			apple: {
@@ -43,6 +44,13 @@ export const Config = {
 					shadowBlur: 15,
 				},
 				decayRate: 0.5, // Multiplier lost per second
+			},
+			glitchBerry: {
+				points: 10,
+				color: '#00FFFF', // Starting as cyan before going full RGB
+				graphics: { shadowColor: '#9400D3', shadowBlur: 30 },
+				effect: { type: 'rgbSnake', duration: 10000 }, // Effect lasts for 10 sec
+				music: 'music/NyanCat_cut.mp3',
 			},
 		},
 	},

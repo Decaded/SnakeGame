@@ -24,11 +24,13 @@ export class GameState {
 		this.baseSpeed = Config.Game.BASE_SPEED;
 		this.currentSpeed = Config.Game.BASE_SPEED;
 		this.speedCounter = 0;
-		this.food = FoodSystem.generate(this.tileCount, this.snake);
+		this.food = FoodSystem.generate(this.tileCount, this.snake, this.level);
 		this.effects = {
 			combo: { active: false, remaining: 0 },
 			glow: { active: false, endTime: 0 },
+			rgbSnake: { active: false, endTime: 0 },
 		};
+		this.snakeColor = Config.UI.COLORS.snake;
 		this.gameOver = false;
 		this.modalShown = false;
 	}

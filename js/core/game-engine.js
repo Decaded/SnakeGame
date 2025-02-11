@@ -59,7 +59,7 @@ export class GameEngine {
 		// Food handling
 		if (this.isFoodCollision(head)) {
 			this.handleFoodConsumption();
-			this.state.food = FoodSystem.generate(this.state.tileCount, this.state.snake);
+			this.state.food = FoodSystem.generate(this.state.tileCount, this.state.snake, this.state.level);
 		} else {
 			this.state.snake.pop();
 		}
@@ -74,6 +74,7 @@ export class GameEngine {
 		return this.state.food.some(f => head.x === f.position.x && head.y === f.position.y);
 	}
 
+	// In game-engine.js, update the handleFoodConsumption method
 	handleFoodConsumption() {
 		const eatenFoods = this.state.food.filter(f => this.state.snake[0].x === f.position.x && this.state.snake[0].y === f.position.y);
 
@@ -105,11 +106,15 @@ export class GameEngine {
 					showToast('SCORE DOUBLED!');
 				}
 				this.applyEffect({ ...food.effect, type: 'glow' });
+			} else if (food.type === 'glitchBerry') {
+				this.activateRGBSnake(food.effect.duration);
+				this.playMusic(food.music, food.effect.duration);
+				showToast('GLITCH MODE ACTIVATED!');
 			}
 		});
 
 		this.state.speedCounter++;
-		this.state.food = FoodSystem.generate(this.state.tileCount, this.state.snake);
+		this.state.food = FoodSystem.generate(this.state.tileCount, this.state.snake, this.state.level); // Pass level here
 	}
 
 	applyEffect(effect) {
@@ -157,20 +162,23 @@ export class GameEngine {
 	drawSnake() {
 		const ctx = this.state.ctx;
 		const glow = this.state.effects.glow.active;
+		const rgbEffect = this.state.effects.rgbSnake.active;
+		let color = Config.UI.COLORS.snake;
 
-		if (glow) {
-			ctx.fillStyle = '#FFD700';
+		if (rgbEffect) {
+			color = this.state.snakeColor; // Use dynamic RGB color
+		} else if (glow) {
+			color = '#FFD700'; // Golden glow color
 			ctx.shadowColor = '#FFD700';
 			ctx.shadowBlur = 20;
-		} else {
-			ctx.fillStyle = Config.UI.COLORS.snake;
 		}
 
+		ctx.fillStyle = color;
 		this.state.snake.forEach(segment => {
 			ctx.fillRect(segment.x * this.state.gridSize, segment.y * this.state.gridSize, this.state.gridSize, this.state.gridSize);
 		});
 
-		// Reset shadow properties
+		// Reset shadow properties after drawing
 		ctx.shadowBlur = 0;
 	}
 
@@ -278,5 +286,42 @@ export class GameEngine {
 	triggerGameOver() {
 		showToast('Game Over!', false);
 		this.modules.forEach(module => module.handleGameOver?.());
+	}
+
+	activateRGBSnake(duration) {
+		const startTime = Date.now();
+		this.state.effects.rgbSnake = { active: true, endTime: startTime + duration };
+
+		// Update snake color over time
+		const interval = setInterval(() => {
+			const elapsed = Date.now() - startTime;
+			if (elapsed >= duration) {
+				clearInterval(interval);
+				this.state.effects.rgbSnake.active = false;
+				this.state.snakeColor = Config.UI.COLORS.snake; // Reset snake color
+				return;
+			}
+
+			// Smooth RGB transition
+			const r = Math.floor(128 + 127 * Math.sin(elapsed / 200));
+			const g = Math.floor(128 + 127 * Math.sin(elapsed / 300));
+			const b = Math.floor(128 + 127 * Math.sin(elapsed / 400));
+
+			this.state.snakeColor = `rgb(${r}, ${g}, ${b})`;
+		}, 50);
+	}
+
+	playMusic(url, duration) {
+		// Create an audio element
+		const audio = new Audio(url); // URL points to local audio file
+		audio.currentTime = 0;
+		audio.volume = 0.5; // Set volume (0 to 1)
+		audio.play();
+
+		// Stop the audio after the effect duration
+		setTimeout(() => {
+			audio.pause();
+			audio.currentTime = 0; // Reset audio
+		}, duration);
 	}
 }

@@ -31,15 +31,6 @@ export class UIManager {
 			if (e.key === 'Enter') this.handleScoreSubmission();
 		});
 
-		// Mobile controls
-		// document.querySelectorAll('.control-btn').forEach(btn => {
-		// 	btn.addEventListener('touchstart', e => {
-		// 		e.preventDefault();
-		// 		const direction = btn.id.replace('Btn', '');
-		// 		this.handleMobileInput(direction);
-		// 	});
-		// });
-
 		// Mobile controls - translate touch events to keyboard events
 		document.querySelectorAll('.control-btn').forEach(btn => {
 			// Map button IDs to keyboard keys
@@ -83,20 +74,6 @@ export class UIManager {
 		// Dispatch to document to leverage existing keyboard handling
 		document.dispatchEvent(event);
 	}
-
-	// handleMobileInput(direction) {
-	// 	const directions = {
-	// 		up: { x: 0, y: -1 },
-	// 		down: { x: 0, y: 1 },
-	// 		left: { x: -1, y: 0 },
-	// 		right: { x: 1, y: 0 },
-	// 	};
-
-	// 	if (directions[direction]) {
-	// 		const event = new KeyboardEvent('keydown', { key: `Arrow${direction.charAt(0).toUpperCase() + direction.slice(1)}` });
-	// 		document.dispatchEvent(event);
-	// 	}
-	// }
 
 	async handleScoreSubmission() {
 		const nickname = this.elements.nicknameInput.value.trim();

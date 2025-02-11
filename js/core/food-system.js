@@ -5,7 +5,7 @@ const importVersioned = path => import(`${path}?v=${window.APP_VERSION}`);
 const { Config } = await importVersioned('../config.js');
 
 export class FoodSystem {
-	static generate(tileCount, snake) {
+	static generate(tileCount, snake, level) {
 		const isFirstFood = snake.length === 1;
 		let primaryFood,
 			hubrisFood = null;
@@ -15,8 +15,8 @@ export class FoodSystem {
 			primaryFood = FoodSystem.randomType();
 		} while (isFirstFood && (primaryFood === 'goldenApple' || primaryFood === 'hubrisBerry'));
 
-		// Roll for Hubris Berry, but ONLY if another food was selected first
-		const shouldSpawnHubris = Math.random() < Config.Food.SPAWN_PROBABILITIES.hubrisBerry;
+		// Roll for Hubris Berry, but ONLY if another food was selected first AND level is 5 or above
+		const shouldSpawnHubris = level >= 5 && Math.random() < Config.Food.SPAWN_PROBABILITIES.hubrisBerry;
 		if (shouldSpawnHubris) {
 			hubrisFood = 'hubrisBerry';
 		}
@@ -48,13 +48,12 @@ export class FoodSystem {
 		const rand = Math.random();
 		let cumulative = 0;
 
-		// Exclude Hubris Berry from normal selection
 		for (const [type, prob] of Object.entries(Config.Food.SPAWN_PROBABILITIES)) {
 			if (type === 'hubrisBerry') continue; // Hubris Berry is handled separately
 			cumulative += prob;
 			if (rand <= cumulative) return type;
 		}
-		return 'apple';
+		return 'apple'; // Fallback
 	}
 
 	static randomPosition(tileCount, snake) {
