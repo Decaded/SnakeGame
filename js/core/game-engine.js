@@ -145,6 +145,16 @@ export class GameEngine {
 		if (this.state.effects.glow.active && Date.now() > this.state.effects.glow.endTime) {
 			this.state.effects.glow.active = false;
 		}
+
+		// Update combo effect
+		if (this.state.effects.combo.active) {
+			this.state.effects.combo.remaining = Math.max(0, this.state.effects.combo.remaining - this.state.currentSpeed / 1000);
+
+			if (this.state.effects.combo.remaining <= 0) {
+				this.state.effects.combo.active = false;
+				showToast('Combo expired!', false);
+			}
+		}
 	}
 
 	render() {
