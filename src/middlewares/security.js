@@ -50,10 +50,18 @@ module.exports = [
 		methods: ['GET', 'POST', 'OPTIONS'],
 		allowedHeaders: ['Content-Type'],
 		exposedHeaders: ['X-RateLimit-Limit', 'X-RateLimit-Remaining'],
+		credentials: true,
 	}),
 	rateLimit({
 		...config.rateLimit,
-		validate: { trustProxy: true }, // Trust X-Forwarded-For
-		skip: req => CLOUDFLARE_IPS.some(ip => req.ip.startsWith(ip)), // Skip CF IPs
+		validate: { trustProxy: true },
+		skip: req => CLOUDFLARE_IPS.some(ip => req.ip.startsWith(ip)),
+		handler: (req, res) => {
+			// Rate limit response
+			res.status(429).json({
+				success: false,
+				message: 'Too many requests',
+			});
+		},
 	}),
 ];
