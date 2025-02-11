@@ -27,7 +27,7 @@
 		/>
 		<link
 			rel="stylesheet"
-			href="style.css?v=1.4.3"
+			href="style.css?v=1.4.4"
 		/>
 
 		<!-- Favicon -->
@@ -208,14 +208,16 @@
 				placeholder="Enter your nickname"
 				maxlength="16"
 			/>
-			<button id="submitScoreButton">Submit Score</button>
-			<button
-				id="clearCacheButton"
-				class="cache-button"
-				title="Clear local storage for this nickname"
-			>
-				↻ Reset Account
-			</button>
+			<div class="modal-buttons">
+				<button id="submitScoreButton">Submit Score</button>
+				<button
+					id="clearCacheButton"
+					class="cache-button"
+					title="Clear local storage for this nickname"
+				>
+					↻ Reset Account
+				</button>
+			</div>
 		</div>
 
 		<!-- Toast Notification Container -->
@@ -224,7 +226,7 @@
 		<!-- Scripts -->
 		<script
 			type="module"
-			src="./js/main.js?v=1.5.3"
+			src="./js/main.js?v=1.5.4"
 		></script>
 	</body>
 </html>

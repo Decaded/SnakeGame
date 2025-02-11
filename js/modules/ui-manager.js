@@ -9,6 +9,8 @@ export class UIManager {
 	constructor(game, leaderboard) {
 		this.game = game;
 		this.leaderboard = leaderboard;
+		this.handleCacheClear = this.handleCacheClear.bind(this);
+		this.listenersInitialized = false;
 		this.elements = {
 			gameOverModal: document.getElementById('gameOverModal'),
 			nicknameInput: document.getElementById('nicknameInput'),
@@ -21,7 +23,10 @@ export class UIManager {
 
 	init(state) {
 		this.state = state;
-		this.setupEventListeners();
+		if (!this.listenersInitialized) {
+			this.setupEventListeners();
+			this.listenersInitialized = true;
+		}
 	}
 
 	setupEventListeners() {
@@ -69,6 +74,13 @@ export class UIManager {
 					showToast('Local cache cleared for ' + nickname, true);
 				}
 			});
+
+			// Clear previous listener if any
+			const clearBtn = document.getElementById('clearCacheButton');
+			if (clearBtn) {
+				clearBtn.removeEventListener('click', this.handleCacheClear);
+				clearBtn.addEventListener('click', this.handleCacheClear);
+			}
 		});
 	}
 
@@ -173,6 +185,22 @@ export class UIManager {
 
 	handleGameOver() {
 		this.toggleModal(true);
+	}
+
+	handleCacheClear() {
+		const nickname = this.elements.nicknameInput.value.trim();
+		if (nickname) {
+			localStorage.removeItem(`snakeToken_${nickname}`);
+			showToast(`Local cache cleared for ${nickname}`, true);
+		}
+	}
+
+	destroy() {
+		const clearBtn = document.getElementById('clearCacheButton');
+		if (clearBtn) {
+			clearBtn.removeEventListener('click', this.handleCacheClear);
+		}
+		this.listenersInitialized = false;
 	}
 
 	toggleModal(show = true) {

@@ -229,6 +229,14 @@ canvas {
 	background: #00cc00;
 }
 
+.modal-buttons {
+	display: flex;
+	flex-direction: column;
+	gap: 10px;
+	width: 100%;
+	align-items: center;
+}
+
 #toast {
 	position: fixed;
 	bottom: 20px;
@@ -522,19 +530,17 @@ body.tablet-device #infoSection {
 }
 
 .cache-button {
-	position: absolute;
-	top: 10px;
-	right: 10px;
-	background: none;
-	border: none;
-	color: #ff4444;
-	cursor: pointer;
-	font-family: 'Press Start 2P', cursive;
-	font-size: 0.6em;
+	background: #ff4444;
+	border: 2px solid #ff0000;
+	color: white;
+	padding: 8px 16px;
+	font-size: 0.7em;
+	width: fit-content;
+	margin-top: 10px;
 }
 
 .cache-button:hover {
-	color: #ff0000;
+	background: #ff0000;
 }
 
 /* MOBILE VIEW (max-width: 600px) */

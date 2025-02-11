@@ -268,6 +268,7 @@ export class GameEngine {
 	}
 
 	reset() {
+		this.modules.forEach(module => module.destroy?.());
 		clearTimeout(this.state.gameLoopTimeout);
 		this.state.reset();
 		this.updateLevelDisplay();
