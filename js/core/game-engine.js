@@ -82,9 +82,19 @@ export class GameEngine {
 			if (food.type === 'cherry') {
 				this.applyEffect(food.effect);
 				this.state.score += food.points * this.state.level;
+				this.state.effects.combo.remaining = food.effect.duration;
 			} else if (food.type === 'apple') {
 				let multiplier = this.state.effects.combo.active ? 2 : 1;
 				this.state.score += food.points * this.state.level * multiplier;
+
+				// Decrement combo on apple collection
+				if (this.state.effects.combo.active) {
+					this.state.effects.combo.remaining--;
+					if (this.state.effects.combo.remaining <= 0) {
+						this.state.effects.combo.active = false;
+						showToast('Combo finished!', false);
+					}
+				}
 			} else if (food.type === 'hubrisBerry') {
 				const elapsed = (Date.now() - food.spawnTime) / 1000;
 				let multiplier = 3 - Config.Food.PROPERTIES.hubrisBerry.decayRate * elapsed;
@@ -144,16 +154,6 @@ export class GameEngine {
 		// Update glow effect
 		if (this.state.effects.glow.active && Date.now() > this.state.effects.glow.endTime) {
 			this.state.effects.glow.active = false;
-		}
-
-		// Update combo effect
-		if (this.state.effects.combo.active) {
-			this.state.effects.combo.remaining = Math.max(0, this.state.effects.combo.remaining - this.state.currentSpeed / 1000);
-
-			if (this.state.effects.combo.remaining <= 0) {
-				this.state.effects.combo.active = false;
-				showToast('Combo expired!', false);
-			}
 		}
 	}
 
