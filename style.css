@@ -489,31 +489,36 @@ body.tablet-device #infoSection {
 }
 
 .token-warning {
-	margin-top: 20px;
+	margin: 20px 0;
 	padding: 15px;
-	background: rgba(255, 0, 0, 0.1);
-	border: 2px solid #ff4444;
+	background: rgba(255, 215, 0, 0.1);
+	border: 3px solid #ffd700;
 	border-radius: 8px;
+	text-align: center;
+}
+
+.token-warning h3 {
+	color: #ffd700;
+	margin: 0 0 15px 0;
+	font-size: 1.1em;
 }
 
 .token-display {
-	font-family: monospace;
-	font-size: 1.2em;
-	margin: 10px 0;
-	padding: 8px;
-	background: rgba(0, 0, 0, 0.5);
+	font-family: 'Courier New', monospace;
+	font-size: 1.5em;
+	letter-spacing: 2px;
+	margin: 15px 0;
+	padding: 10px;
+	background: rgba(0, 0, 0, 0.7);
+	border: 2px solid #00ff00;
 	border-radius: 4px;
 }
 
 .token-warning button {
-	background: #00ff00;
-	color: #000;
-	border: none;
-	padding: 8px 16px;
-	border-radius: 4px;
-	cursor: pointer;
+	margin: 10px 5px;
+	padding: 8px 20px;
 	font-family: 'Press Start 2P', cursive;
-	font-size: 0.8em;
+	font-size: 0.7em;
 }
 
 /* MOBILE VIEW (max-width: 600px) */

@@ -87,15 +87,19 @@ export class UIManager {
 		try {
 			const result = await this.leaderboard.saveScore(nickname, score);
 
-			if (result.success && result.token) {
-				this.showTokenWarning(result.token);
-			}
-
-			showToast(result.message, result.success);
-
 			if (result.success) {
-				this.toggleModal(false);
-				this.game.reset();
+				if (result.token) {
+					// Show token warning but keep modal open
+					this.showTokenWarning(result.token);
+					showToast(result.message, true);
+				} else {
+					// Only close modal for existing users
+					this.toggleModal(false);
+					this.game.reset();
+					showToast(result.message, true);
+				}
+			} else {
+				showToast(result.message, false);
 			}
 		} catch (error) {
 			showToast('Failed to save score', false);
@@ -106,17 +110,25 @@ export class UIManager {
 	showTokenWarning(token) {
 		const warningHTML = `
       <div class="token-warning">
-        <h3>SAVE YOUR TOKEN!</h3>
-        <p>This is your only recovery method:</p>
+        <h3>⚠️ SAVE THIS TOKEN! ⚠️</h3>
+        <p>This is your <b>ONLY WAY</b> to update your score from another device:</p>
         <div class="token-display">${token}</div>
-        <button onclick="navigator.clipboard.writeText('${token}')">
+        <button onclick="
+          navigator.clipboard.writeText('${token}');
+          this.textContent = 'Copied!';
+          setTimeout(() => this.textContent = 'Copy Again', 2000);
+        ">
           Copy to Clipboard
+        </button>
+        <button onclick="this.closest('.token-warning').remove()">
+          I've Saved It
         </button>
       </div>
     `;
 
-		const existingWarning = this.elements.gameOverModal.querySelector('.token-warning');
-		if (existingWarning) existingWarning.remove();
+		// Clear previous warnings
+		const existing = this.elements.gameOverModal.querySelector('.token-warning');
+		if (existing) existing.remove();
 
 		this.elements.gameOverModal.insertAdjacentHTML('beforeend', warningHTML);
 	}
