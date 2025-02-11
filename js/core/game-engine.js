@@ -71,56 +71,45 @@ export class GameEngine {
 	}
 
 	isFoodCollision(head) {
-		return head.x === this.state.food.position.x && head.y === this.state.food.position.y;
+		return this.state.food.some(f => head.x === f.position.x && head.y === f.position.y);
 	}
 
 	handleFoodConsumption() {
-		if (this.state.food.type === 'cherry') {
-			this.applyEffect(this.state.food.effect);
-			this.state.score += this.state.food.points * this.state.level;
-		} else if (this.state.food.type === 'apple') {
-			let multiplier = 1;
-			if (this.state.effects.combo.active) {
-				multiplier = 2;
-				this.state.effects.combo.remaining--;
-				if (this.state.effects.combo.remaining <= 0) {
+		const eatenFoods = this.state.food.filter(f => this.state.snake[0].x === f.position.x && this.state.snake[0].y === f.position.y);
+
+		eatenFoods.forEach(food => {
+			if (food.type === 'cherry') {
+				this.applyEffect(food.effect);
+				this.state.score += food.points * this.state.level;
+			} else if (food.type === 'apple') {
+				let multiplier = this.state.effects.combo.active ? 2 : 1;
+				this.state.score += food.points * this.state.level * multiplier;
+			} else if (food.type === 'hubrisBerry') {
+				const elapsed = (Date.now() - food.spawnTime) / 1000;
+				let multiplier = 3 - Config.Food.PROPERTIES.hubrisBerry.decayRate * elapsed;
+				multiplier = Math.max(multiplier, -3);
+
+				const rawPoints = food.points * multiplier;
+				const points = Math.round(rawPoints);
+				this.state.score += points;
+
+				showToast(multiplier > 0 ? `${multiplier.toFixed(1)}x HUBRIS!` : `${Math.abs(multiplier).toFixed(1)}x PENALTY!`, false);
+			} else if (food.type === 'goldenApple') {
+				if (this.state.effects.combo.active) {
+					this.state.score *= 3;
 					this.state.effects.combo.active = false;
-					showToast('COMBO ENDED', false);
+					this.state.effects.combo.remaining = 0;
+					showToast('SCORE TRIPLED!');
+				} else {
+					this.state.score *= 2;
+					showToast('SCORE DOUBLED!');
 				}
+				this.applyEffect({ ...food.effect, type: 'glow' });
 			}
-			this.state.score += this.state.food.points * this.state.level * multiplier;
-		} else if (this.state.food.type === 'hubrisBerry') {
-			const elapsed = (Date.now() - this.state.food.spawnTime) / 1000;
-			let multiplier = 3 - Config.Food.PROPERTIES.hubrisBerry.decayRate * elapsed;
-			multiplier = Math.max(multiplier, -3); // Cap at -3x
+		});
 
-			// Calculate points and round to avoid decimals in the score
-			const rawPoints = this.state.food.points * multiplier;
-			const points = Math.round(rawPoints);
-			this.state.score += points;
-
-			// Visual feedback with correct string interpolation
-			if (multiplier > 0) {
-				showToast(`${multiplier.toFixed(1)}x HUBRIS!`);
-			} else {
-				showToast(`${Math.abs(multiplier).toFixed(1)}x PENALTY!`, false);
-			}
-		} else if (this.state.food.type === 'goldenApple') {
-			if (this.state.effects.combo.active) {
-				this.state.score *= 3;
-				this.state.effects.combo.active = false;
-				this.state.effects.combo.remaining = 0;
-				showToast('SCORE TRIPLED!');
-			} else {
-				this.state.score *= 2;
-				showToast('SCORE DOUBLED!');
-			}
-			this.applyEffect({
-				...this.state.food.effect,
-				type: 'glow',
-			});
-		}
 		this.state.speedCounter++;
+		this.state.food = FoodSystem.generate(this.state.tileCount, this.state.snake);
 	}
 
 	applyEffect(effect) {
@@ -185,75 +174,83 @@ export class GameEngine {
 		ctx.shadowBlur = 0;
 	}
 
-	// game-engine.js
+	// The drawFood function supports multiple foods
 	drawFood() {
-		const { position, type, color, graphics, spawnTime } = this.state.food;
 		const ctx = this.state.ctx;
 
-		// Reset graphics properties
-		ctx.shadowBlur = 0;
-		ctx.shadowColor = 'transparent';
+		this.state.food.forEach(food => {
+			if (!food) return; // Safety check
 
-		// Handle Hubris Berry separately
-		if (type === 'hubrisBerry') {
-			const elapsed = (Date.now() - spawnTime) / 1000;
-			const decayRate = Config.Food.PROPERTIES.hubrisBerry.decayRate;
-			const multiplier = 3 - decayRate * elapsed;
+			const { position, type, color, graphics, spawnTime } = food;
 
-			// Color progression: Indigo → Purple → Black
-			let currentColor;
-			if (multiplier >= 1.5) {
-				currentColor = '#4B0082'; // Bright indigo
-			} else if (multiplier >= 0) {
-				currentColor = '#8A2BE2'; // Purple
+			// Reset graphics properties
+			ctx.shadowBlur = 0;
+			ctx.shadowColor = 'transparent';
+
+			// Handle Hubris Berry separately
+			if (type === 'hubrisBerry') {
+				const elapsed = (Date.now() - spawnTime) / 1000;
+				const decayRate = Config.Food.PROPERTIES.hubrisBerry.decayRate;
+				const multiplier = 3 - decayRate * elapsed;
+
+				let currentColor;
+				if (multiplier >= 1.5) {
+					currentColor = '#4B0082'; // Bright indigo
+				} else if (multiplier >= 0) {
+					currentColor = '#8A2BE2'; // Purple
+				} else {
+					currentColor = '#2F4F4F'; // Dark slate
+				}
+
+				ctx.shadowColor = multiplier >= 0 ? '#4B0082' : '#2F4F4F';
+				ctx.shadowBlur = 15 + Math.abs(multiplier * 5);
+
+				ctx.fillStyle = currentColor;
+				ctx.beginPath();
+				ctx.arc(
+					position.x * this.state.gridSize + this.state.gridSize / 2,
+					position.y * this.state.gridSize + this.state.gridSize / 2,
+					this.state.gridSize / 2 - 1,
+					0,
+					Math.PI * 2,
+				);
+				ctx.fill();
+
+				if (multiplier > 0) {
+					const pulse = Math.sin(Date.now() / 200) * 2;
+					ctx.lineWidth = 2;
+					ctx.strokeStyle = `rgba(75, 0, 130, ${0.5 + pulse * 0.2})`;
+					ctx.stroke();
+				}
 			} else {
-				currentColor = '#2F4F4F'; // Dark slate
+				// Apply food-specific graphics
+				if (graphics) {
+					Object.entries(graphics).forEach(([key, value]) => {
+						ctx[key] = value;
+					});
+				}
+
+				ctx.fillStyle = color;
+				ctx.beginPath();
+				ctx.arc(
+					position.x * this.state.gridSize + this.state.gridSize / 2,
+					position.y * this.state.gridSize + this.state.gridSize / 2,
+					this.state.gridSize / 2 - 1,
+					0,
+					Math.PI * 2,
+				);
+				ctx.fill();
+
+				if (type === 'goldenApple') {
+					ctx.lineWidth = 2;
+					ctx.strokeStyle = 'rgba(255, 215, 0, 0.5)';
+					ctx.stroke();
+				}
 			}
 
-			// Shadow effects
-			ctx.shadowColor = multiplier >= 0 ? '#4B0082' : '#2F4F4F';
-			ctx.shadowBlur = 15 + Math.abs(multiplier * 5);
-
-			// Draw the berry
-			ctx.fillStyle = currentColor;
-			ctx.beginPath();
-			ctx.arc(position.x * this.state.gridSize + this.state.gridSize / 2, position.y * this.state.gridSize + this.state.gridSize / 2, this.state.gridSize / 2 - 1, 0, Math.PI * 2);
-			ctx.fill();
-
-			// Add pulsing effect for positive multiplier
-			if (multiplier > 0) {
-				const pulse = Math.sin(Date.now() / 200) * 2;
-				ctx.lineWidth = 2;
-				ctx.strokeStyle = `rgba(75, 0, 130, ${0.5 + pulse * 0.2})`;
-				ctx.stroke();
-			}
-		}
-		// Handle other food types
-		else {
-			// Apply food-specific graphics
-			if (graphics) {
-				Object.entries(graphics).forEach(([key, value]) => {
-					ctx[key] = value;
-				});
-			}
-
-			// Draw the food
-			ctx.fillStyle = color;
-			ctx.beginPath();
-			ctx.arc(position.x * this.state.gridSize + this.state.gridSize / 2, position.y * this.state.gridSize + this.state.gridSize / 2, this.state.gridSize / 2 - 1, 0, Math.PI * 2);
-			ctx.fill();
-
-			// Special effects for golden apple
-			if (type === 'goldenApple') {
-				ctx.lineWidth = 2;
-				ctx.strokeStyle = 'rgba(255, 215, 0, 0.5)';
-				ctx.stroke();
-			}
-		}
-
-		// Reset shadow properties
-		ctx.shadowBlur = 0;
-		ctx.shadowColor = 'transparent';
+			ctx.shadowBlur = 0;
+			ctx.shadowColor = 'transparent';
+		});
 	}
 
 	drawUI() {

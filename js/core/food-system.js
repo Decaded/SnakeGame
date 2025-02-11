@@ -7,29 +7,50 @@ const { Config } = await importVersioned('../config.js');
 export class FoodSystem {
 	static generate(tileCount, snake) {
 		const isFirstFood = snake.length === 1;
-		let type;
+		let primaryFood,
+			hubrisFood = null;
 
-		if (isFirstFood) {
-			do {
-				type = this.randomType();
-			} while (type === 'goldenApple' || type === 'hubrisBerry');
-		} else {
-			type = this.randomType();
+		// Ensure the first food isn't hubris or goldenApple
+		do {
+			primaryFood = FoodSystem.randomType();
+		} while (isFirstFood && (primaryFood === 'goldenApple' || primaryFood === 'hubrisBerry'));
+
+		// Roll for Hubris Berry, but ONLY if another food was selected first
+		const shouldSpawnHubris = Math.random() < Config.Food.SPAWN_PROBABILITIES.hubrisBerry;
+		if (shouldSpawnHubris) {
+			hubrisFood = 'hubrisBerry';
 		}
 
-		return {
-			type: type,
-			position: this.randomPosition(tileCount, snake),
-			spawnTime: Date.now(),
-			...Config.Food.PROPERTIES[type],
-		};
+		// Always spawn the main food
+		const foodItems = [
+			{
+				type: primaryFood,
+				position: FoodSystem.randomPosition(tileCount, snake),
+				spawnTime: Date.now(),
+				...Config.Food.PROPERTIES[primaryFood],
+			},
+		];
+
+		// If Hubris Berry should spawn, add it as a second food
+		if (hubrisFood) {
+			foodItems.push({
+				type: hubrisFood,
+				position: FoodSystem.randomPosition(tileCount, snake),
+				spawnTime: Date.now(),
+				...Config.Food.PROPERTIES[hubrisFood],
+			});
+		}
+
+		return foodItems;
 	}
 
 	static randomType() {
 		const rand = Math.random();
 		let cumulative = 0;
 
+		// Exclude Hubris Berry from normal selection
 		for (const [type, prob] of Object.entries(Config.Food.SPAWN_PROBABILITIES)) {
+			if (type === 'hubrisBerry') continue; // Hubris Berry is handled separately
 			cumulative += prob;
 			if (rand <= cumulative) return type;
 		}
