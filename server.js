@@ -3,8 +3,9 @@ const express = require('express');
 const morgan = require('morgan');
 const config = require('./src/config');
 const securityMiddlewares = require('./src/middlewares/security');
-const errorHandler = require('./src/middlewares/errorHandler');
-const scoresRouter = require('./src/routes/scores.route');
+const saveScoreRouter = require('./src/routes/saveScore.route');
+const getTopPlayersRouter = require('./src/routes/getTopPlayers.route');
+const authRouter = require('./src/routes/auth.route');
 
 const app = express();
 
@@ -25,7 +26,9 @@ app.use(express.urlencoded({ extended: true }));
 app.use(morgan(process.env.NODE_ENV === 'production' ? 'combined' : 'dev'));
 
 // Routes
-app.use('/SnakeGame', scoresRouter);
+app.use('/SnakeGame/saveScore', saveScoreRouter);
+app.use('/SnakeGame/getTopPlayers', getTopPlayersRouter);
+app.use('/SnakeGame', authRouter);
 
 // Error handling
 app.use(errorHandler);
