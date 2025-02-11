@@ -3,6 +3,7 @@ const express = require('express');
 const morgan = require('morgan');
 const config = require('./src/config');
 const securityMiddlewares = require('./src/middlewares/security');
+const errorHandler = require('./src/middlewares/errorHandler');
 const saveScoreRouter = require('./src/routes/saveScore.route');
 const getTopPlayersRouter = require('./src/routes/getTopPlayers.route');
 const authRouter = require('./src/routes/auth.route');
