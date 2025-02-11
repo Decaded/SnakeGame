@@ -77,18 +77,58 @@ export class UIManager {
 
 	async handleScoreSubmission() {
 		const nickname = this.elements.nicknameInput.value.trim();
+		const score = this.game.state.score;
 
 		if (!nickname) {
-			showToast('No nickname entered', false);
-			this.toggleModal(false);
-			this.game.reset();
+			showToast('Please enter a nickname', false);
 			return;
 		}
 
-		const result = await this.leaderboard.saveScore(nickname, this.game.state.score);
-		showToast(result.message, result.success);
-		this.toggleModal(false);
-		this.game.reset();
+		try {
+			const result = await this.leaderboard.saveScore(nickname, score);
+
+			if (result.success && result.token) {
+				this.showTokenWarning(result.token);
+			}
+
+			showToast(result.message, result.success);
+
+			if (result.success) {
+				this.toggleModal(false);
+				this.game.reset();
+			}
+		} catch (error) {
+			showToast('Failed to save score', false);
+			console.error('Submission error:', error);
+		}
+	}
+
+	showTokenWarning(token) {
+		const warningHTML = `
+      <div class="token-warning">
+        <h3>SAVE YOUR TOKEN!</h3>
+        <p>This is your only recovery method:</p>
+        <div class="token-display">${token}</div>
+        <button onclick="navigator.clipboard.writeText('${token}')">
+          Copy to Clipboard
+        </button>
+      </div>
+    `;
+
+		const existingWarning = this.elements.gameOverModal.querySelector('.token-warning');
+		if (existingWarning) existingWarning.remove();
+
+		this.elements.gameOverModal.insertAdjacentHTML('beforeend', warningHTML);
+	}
+
+	toggleModal(show = true) {
+		this.elements.gameOverModal.style.display = show ? 'block' : 'none';
+		if (show) {
+			this.elements.nicknameInput.focus();
+			// Clear previous token warnings
+			const warnings = this.elements.gameOverModal.querySelectorAll('.token-warning');
+			warnings.forEach(w => w.remove());
+		}
 	}
 
 	handleGameOver() {

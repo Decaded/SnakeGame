@@ -4,6 +4,8 @@ export class LeaderboardManager {
 		this.topPlayersList = document.getElementById('topPlayers');
 		this.fetchInterval = null;
 		this.isServerOffline = false;
+		this.tokenAttempts = 0;
+		this.MAX_ATTEMPTS = 3;
 	}
 
 	init() {
@@ -47,30 +49,111 @@ export class LeaderboardManager {
 
 	async saveScore(nickname, score) {
 		if (this.isServerOffline) {
-			return {
-				success: false,
-				message: 'Score not saved - server offline',
-			};
+			return this.handleOfflineState();
 		}
 
 		try {
+			const storedToken = localStorage.getItem(`snakeToken_${nickname}`);
+			let token = storedToken || '';
+
+			if (!storedToken) {
+				const claimResponse = await this.handleNewNickname(nickname);
+				if (!claimResponse.success) return claimResponse;
+				token = claimResponse.token;
+			}
+
 			const response = await fetch(`${this.API_BASE}/saveScore`, {
 				method: 'POST',
 				headers: { 'Content-Type': 'application/json' },
-				body: JSON.stringify({ nick: nickname, score }),
-				credentials: 'include',
+				body: JSON.stringify({ nick: nickname, score, token }),
 			});
+
+			if (response.status === 403) {
+				return this.handleInvalidToken(nickname);
+			}
 
 			if (!response.ok) throw new Error('Save failed');
 
-			return await response.json();
+			return this.handleSuccessResponse(nickname, token, await response.json());
 		} catch (error) {
-			this.isServerOffline = true;
+			return this.handleSaveError(error);
+		}
+	}
+
+	async handleNewNickname(nickname) {
+		try {
+			const response = await fetch(`${this.API_BASE}/claimNick`, {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify({ nick: nickname }),
+			});
+
+			if (response.status === 409) {
+				return {
+					success: false,
+					message: 'Nickname taken. Enter your token below',
+				};
+			}
+
+			if (!response.ok) throw new Error('Claim failed');
+
+			const { token, warning } = await response.json();
+			return { success: true, token, message: warning };
+		} catch (error) {
+			console.error('Claim error:', error);
 			return {
 				success: false,
-				message: 'Failed to save score - server offline',
+				message: 'Failed to claim nickname. Server might be offline',
 			};
 		}
+	}
+
+	async handleInvalidToken(nickname) {
+		localStorage.removeItem(`snakeToken_${nickname}`);
+		this.tokenAttempts++;
+
+		if (this.tokenAttempts >= this.MAX_ATTEMPTS) {
+			return {
+				success: false,
+				message: 'Too many failed attempts. Score not saved',
+			};
+		}
+
+		const userToken = prompt(`Invalid token for "${nickname}". Attempt ${this.tokenAttempts}/${this.MAX_ATTEMPTS}\nEnter correct token:`);
+
+		if (!userToken) {
+			return {
+				success: false,
+				message: 'Score submission canceled',
+			};
+		}
+
+		localStorage.setItem(`snakeToken_${nickname}`, userToken);
+		return this.saveScore(nickname, score);
+	}
+
+	handleSuccessResponse(nickname, token, response) {
+		if (!localStorage.getItem(`snakeToken_${nickname}`)) {
+			localStorage.setItem(`snakeToken_${nickname}`, token);
+		}
+		this.tokenAttempts = 0;
+		return response;
+	}
+
+	handleSaveError(error) {
+		console.error('Save error:', error);
+		this.isServerOffline = true;
+		return {
+			success: false,
+			message: 'Failed to save score - server offline',
+		};
+	}
+
+	handleOfflineState() {
+		return {
+			success: false,
+			message: 'Server offline - score not saved',
+		};
 	}
 
 	destroy() {
