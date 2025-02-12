@@ -1,5 +1,17 @@
 # Snake Game
 
+![GitHub](https://img.shields.io/github/license/Decaded/SnakeGame) ![GitHub last commit](https://img.shields.io/github/last-commit/Decaded/SnakeGame)
+![GitHub commit activity](https://img.shields.io/github/commit-activity/m/Decaded/SnakeGame)
+
+## Introduction
+
+### WARNING
+
+> This project is currently under rapid development and is subject to frequent changes. Features, interfaces, and functionality may change without notice. Use at your own
+> discretion and keep an eye on updates!
+
+---
+
 This repository contains the source code for a classic Snake Game with a leaderboard system. The project is split into two main components:
 
 - **Frontend**: The game interface and logic.  
