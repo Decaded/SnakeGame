@@ -80,9 +80,16 @@ export class GameEngine {
 
 		eatenFoods.forEach(food => {
 			if (food.type === 'cherry') {
-				this.applyEffect(food.effect);
+				const effect = food.effect;
+				if (this.state.effects.combo.active) {
+					// Add to existing combo
+					this.state.effects.combo.remaining += effect.duration;
+					showToast(`+${effect.duration} combo! Total: ${this.state.effects.combo.remaining}`);
+				} else {
+					// Start new combo
+					this.applyEffect(effect);
+				}
 				this.state.score += food.points * this.state.level;
-				this.state.effects.combo.remaining = food.effect.duration;
 			} else if (food.type === 'apple') {
 				let multiplier = this.state.effects.combo.active ? 2 : 1;
 				this.state.score += food.points * this.state.level * multiplier;
